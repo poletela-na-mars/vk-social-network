@@ -1,0 +1,24 @@
+.notFound {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 16px;
+}
+
+.notFoundH, .notFoundP {
+  text-align: center;
+  line-height: 2;
+}
+
+.notFoundH {
+  margin-bottom: 8px;
+}
+
+.notFoundImg {
+  max-width: 330px;
+  max-height: 330px;
+  object-fit: contain;
+}
+
+/*# sourceMappingURL=NotFound.module.css.map */
