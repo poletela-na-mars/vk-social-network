@@ -5,7 +5,7 @@ import { loginValidationSchema } from './loginValidationSchema';
 import { fetchAuth, selectIsAuth } from '../../redux/slices/auth';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 
 import { Box, Button, Container, IconButton, InputAdornment, TextField, Typography, useTheme } from '@mui/material';
 import { VisibilityOff, Visibility } from '@mui/icons-material';
@@ -27,9 +27,7 @@ export const Login = () => {
     validationSchema: loginValidationSchema,
     onSubmit: async (values: object) => {
       try {
-        // setIsSubmitting((prevState) => !prevState);
         const data = await dispatch(fetchAuth(values));
-        // setIsSubmitting((prevState) => !prevState);
 
         if (data.meta.requestStatus === 'rejected') {
           await Promise.reject(data.error.message);
@@ -79,6 +77,7 @@ export const Login = () => {
                   error={touched.email && Boolean(errors.email)}
                   helperText={touched.email && errors.email}
                   sx={{margin: '16px 0'}}
+                  autoComplete='on'
               />
               <TextField
                   fullWidth
@@ -104,6 +103,7 @@ export const Login = () => {
                           </IconButton>
                         </InputAdornment>
                   }}
+                  autoComplete='off'
               />
               <Container
                   sx={{
@@ -114,6 +114,18 @@ export const Login = () => {
                     padding: 0,
                   }}
               >
+                <Link to='/register' style={{textDecoration: 'none'}}>
+                  <Typography display='inline'
+                              component='p'
+                              color='lightgray'
+                              sx={{
+                                marginRight: '16px',
+                                '&:hover': { color: theme.palette.primary.main }
+                              }}
+                  >
+                    Зарегистрироваться
+                  </Typography>
+                </Link>
                 <Button
                     style={{
                       backgroundColor: theme.palette.primary.main,

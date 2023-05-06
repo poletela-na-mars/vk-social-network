@@ -6,6 +6,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider, ruRU } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { cities } from '../../data/russianCities';
+import { Link } from 'react-router-dom';
 
 export const Registration = () => {
   const theme = useTheme();
@@ -62,6 +63,7 @@ export const Registration = () => {
                   error={touched.lastName && Boolean(errors.lastName)}
                   helperText={touched.lastName && errors.lastName}
                   sx={{margin: '16px 0'}}
+                  autoComplete='on'
               />
               <Box sx={{display: 'flex', justifyContent: 'space-between', margin: '0 0 16px 0'}}>
                 <TextField
@@ -77,6 +79,7 @@ export const Registration = () => {
                     error={touched.firstName && Boolean(errors.firstName)}
                     helperText={touched.firstName && errors.firstName}
                     sx={{marginRight: '8px'}}
+                    autoComplete='on'
                 />
                 <LocalizationProvider localeText={ruRU.components.MuiLocalizationProvider.defaultProps.localeText}
                                       dateAdapter={AdapterDayjs}>
@@ -134,6 +137,7 @@ export const Registration = () => {
                   error={touched.email && Boolean(errors.email)}
                   helperText={touched.email && errors.email}
                   sx={{marginBottom: '16px'}}
+                  autoComplete='on'
               />
               <TextField
                   required
@@ -149,6 +153,7 @@ export const Registration = () => {
                   error={touched.password && Boolean(errors.password)}
                   helperText={touched.password && errors.password}
                   sx={{marginBottom: '16px'}}
+                  autoComplete='off'
               />
               <Container
                   sx={{
@@ -159,6 +164,18 @@ export const Registration = () => {
                     padding: 0,
                   }}
               >
+                <Link to='/login' style={{textDecoration: 'none'}}>
+                  <Typography display='inline'
+                              component='p'
+                              color='lightgray'
+                              sx={{
+                                marginRight: '16px',
+                                '&:hover': {color: theme.palette.primary.main}
+                              }}
+                  >
+                    Есть аккаунт?
+                  </Typography>
+                </Link>
                 <Button
                     style={{
                       backgroundColor: theme.palette.primary.main,

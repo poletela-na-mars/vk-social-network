@@ -18,13 +18,19 @@ export const fetchRegister: any = createAsyncThunk('auth/fetchRegister', async (
         return res.data;
       })
       .catch((err) => {
-        console.log(err.response.data);
+        console.error(err.response.data);
         return Promise.reject(JSON.stringify(err.response.data));
       });
 });
 
 export const fetchAuthMe: any = createAsyncThunk('auth/fetchAuthMe', async () => {
-  const { data } = await axios.get('/auth/me');
+  const {data} = await axios.get('/auth/me');
+  return data;
+});
+
+// @ts-ignore
+export const fetchUser: any = createAsyncThunk('auth/fetchUser', async ({ id }) => {
+  const { data } = await axios.get(`/user/${id}`);
   return data;
 });
 
@@ -78,6 +84,18 @@ const authSlice = createSlice({
       state.data = null;
       state.status = 'error';
     },
+    [fetchUser.pending]: (state) => {
+      state.data = null;
+      state.status = 'loading';
+    },
+    [fetchUser.fulfilled]: (state, action) => {
+      state.data = action.payload;
+      state.status = 'loaded';
+    },
+    [fetchUser.rejected]: (state) => {
+      state.data = null;
+      state.status = 'error';
+    },
   }
 });
 
@@ -87,4 +105,4 @@ export const selectIsAuth = (state: any) => {
 
 export const authReducer = authSlice.reducer;
 
-export const { logout } = authSlice.actions;
+export const {logout} = authSlice.actions;

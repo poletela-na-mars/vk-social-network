@@ -1,3 +1,8 @@
-
+.registerLink {
+  margin-right: 8px;
+}
+.registerLink:hover {
+  color: theme;
+}
 
 /*# sourceMappingURL=Login.module.css.map */
