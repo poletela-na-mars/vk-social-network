@@ -32,7 +32,7 @@ export const Registration = () => {
     setFieldValue('city', value);
   };
 
-  // TODO - a bug in MUI with error focusing in Date Picker after another input interaction
+  // TODO - [BUG] - a bug in MUI with error focusing in Date Picker after another input interaction
 
   return (
       <Box

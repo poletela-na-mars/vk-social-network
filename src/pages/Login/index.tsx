@@ -2,14 +2,18 @@ import { useState } from 'react';
 import { useFormik } from 'formik';
 import { loginValidationSchema } from './loginValidationSchema';
 
+import { fetchAuth, selectIsAuth } from '../../redux/slices/auth';
+
+import { useDispatch, useSelector } from 'react-redux';
+import { Navigate } from 'react-router-dom';
+
 import { Box, Button, Container, IconButton, InputAdornment, TextField, Typography, useTheme } from '@mui/material';
 import { VisibilityOff, Visibility } from '@mui/icons-material';
 
 export const Login = () => {
   const [passwordVisibility, setPasswordVisibility] = useState(false);
-  // const isAuth = useSelector(selectIsAuth);
-  // const dispatch = useDispatch();
-  //
+  const isAuth = useSelector(selectIsAuth);
+  const dispatch = useDispatch();
 
   const theme = useTheme();
 
@@ -21,31 +25,28 @@ export const Login = () => {
     enableReinitialize: true,
     validateOnChange: true,
     validationSchema: loginValidationSchema,
-    onSubmit: (values: object) => {
-      alert(JSON.stringify(values, null, 2));
+    onSubmit: async (values: object) => {
+      try {
+        // setIsSubmitting((prevState) => !prevState);
+        const data = await dispatch(fetchAuth(values));
+        // setIsSubmitting((prevState) => !prevState);
+
+        if (data.meta.requestStatus === 'rejected') {
+          await Promise.reject(data.error.message);
+        } else if ('token' in data?.payload) {
+          window.localStorage.setItem('token', data.payload.token);
+        }
+      } catch (err) {
+        console.log(err);
+        // TODO - [WORK] - add error messaging
+        // setError('LoginError', { type: 'custom', message: err });
+      }
     },
   });
 
-  // const onSubmit = async (values) => {
-  //   try {
-  //     setIsSubmitting((prevState) => !prevState);
-  //     const data = await dispatch(fetchAuth(values));
-  //     setIsSubmitting((prevState) => !prevState);
-  //
-  //     if (data.meta.requestStatus === 'rejected') {
-  //       await Promise.reject(data.error.message);
-  //     } else if ('token' in data?.payload) {
-  //       window.localStorage.setItem('token', data.payload.token);
-  //     }
-  //   } catch (err) {
-  //     console.log(err);
-  //     setError('LoginError', { type: 'custom', message: err });
-  //   }
-  // };
-
-  // if (isAuth) {
-  //   return <Navigate to='/' />;
-  // }
+  if (isAuth) {
+    return <Navigate to='/' />;
+  }
 
   const handlePasswordVisibilityClick = () => {
     setPasswordVisibility(!passwordVisibility);

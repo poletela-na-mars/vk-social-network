@@ -7,16 +7,18 @@
 }
 
 .notFoundH, .notFoundP {
-  text-align: center;
-  line-height: 2;
+    text-align: center !important;
+    line-height: 2 !important;
 }
 
 .notFoundH {
-  margin-bottom: 8px;
+  margin-bottom: 8px !important;
 }
 
 .notFoundImg {
-  max-width: 330px;
-  max-height: 330px;
+  min-width: 330px;
+  min-height: 330px;
+  max-width: 40vw;
+  max-height: 40vh;
   object-fit: contain;
 }
