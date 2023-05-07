@@ -1,8 +1,6 @@
-.registerLink {
-  margin-right: 8px;
-}
-.registerLink:hover {
-  color: theme;
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
 }
 
 /*# sourceMappingURL=Login.module.css.map */
