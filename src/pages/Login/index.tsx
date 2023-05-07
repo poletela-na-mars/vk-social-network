@@ -10,7 +10,7 @@ import { Link, Navigate } from 'react-router-dom';
 import { Box, Button, Container, IconButton, InputAdornment, TextField, Typography, useTheme } from '@mui/material';
 import { VisibilityOff, Visibility } from '@mui/icons-material';
 
-import styles from './Login.module.scss';
+import './Login.module.scss';
 
 export const Login = () => {
   const [passwordVisibility, setPasswordVisibility] = useState(false);

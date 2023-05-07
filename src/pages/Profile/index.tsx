@@ -3,29 +3,37 @@ import {
   Button,
   CircularProgress,
   Container,
-  Divider, TextField,
+  Divider,
+  IconButton,
+  TextField,
   Typography,
   useTheme
 } from '@mui/material';
-import { useEffect } from 'react';
+import { useFormik } from 'formik';
+import { postValidationSchema } from './postValidationSchema';
+import { useEffect, useState } from 'react';
 import { fetchUser, selectIsAuth } from '../../redux/slices/auth';
 import { useDispatch, useSelector } from 'react-redux';
-import { Navigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { convertDateToAge, formatDate } from '../../utils/date';
 
 import PeopleIcon from '@mui/icons-material/People';
+import EditIcon from '@mui/icons-material/Edit';
 import styles from './Profile.module.scss';
-import { useFormik } from 'formik';
-import { postValidationSchema } from './postValidationSchema';
 
 export const Profile = () => {
   const theme = useTheme();
 
+  const [curUser, setCurUserData] = useState<any>();
+
   const {id} = useParams();
   const dispatch = useDispatch();
   const isAuth = useSelector(selectIsAuth);
+  const navigate = useNavigate();
   const userData = useSelector((state: any) => state.auth.data);
-  const isUserDataLoading = userData === undefined || userData === null;
+  const isCurUserDataLoading = curUser === undefined || curUser === null;
+
+  const isMyProfile = !isCurUserDataLoading && curUser?._id === userData?._id;
 
   const {touched, errors, isSubmitting, handleSubmit, handleChange, values} = useFormik({
     initialValues: {
@@ -34,7 +42,7 @@ export const Profile = () => {
     enableReinitialize: true,
     validateOnChange: true,
     validationSchema: postValidationSchema,
-    onSubmit: async (values: object) => {
+    onSubmit: async (values, {resetForm}) => {
       // try {
       //   const data = await dispatch(fetchAuth(values));
       //
@@ -49,20 +57,25 @@ export const Profile = () => {
       //   // setError('LoginError', { type: 'custom', message: err });
       // }
       console.log(values);
+      resetForm({});
     },
   });
 
   useEffect(() => {
-    dispatch(fetchUser({id}));
-  }, [dispatch, id]);
+    dispatch(fetchUser({id})).then((res: { payload: object }) => setCurUserData(res.payload));
+  }, []);
 
   if (!window.localStorage.getItem('token') && !isAuth) {
-    return <Navigate to='/login' />;
+    navigate('/login');
   }
+
+  const goToEditProfile = () => {
+    navigate(`/user/${curUser._id}/edit`);
+  };
 
   return (
       <Container maxWidth='lg'>
-        {isUserDataLoading
+        {isCurUserDataLoading
             ? <Box
                 sx={{
                   display: 'flex',
@@ -89,12 +102,26 @@ export const Profile = () => {
                           flexDirection: 'column',
                           justifyContent: 'center',
                           alignItems: 'center',
-                          marginBottom: '16px',
+                          margin: '16px 0',
                         }}>
-                      <img className={styles.avatar} src={userData?.avatarUrl || '/default-avatar.png'}
-                           alt={`${userData?.lastName} ${userData?.firstName}`} />
-                      <Button>Изменить фото</Button>
-                      <Button>Удалить фото</Button>
+                      <img className={styles.avatar} src={curUser?.avatarUrl || '/default-avatar.png'}
+                           alt={`${curUser?.lastName} ${curUser?.firstName}`} />
+                      {isMyProfile
+                          ?
+                          <>
+                            <Button>Изменить фото</Button>
+                            <Button>Удалить фото</Button>
+                          </>
+                          :
+                          <Button>Добавить в друзья</Button>
+                      }
+                      <Button
+                          variant='outlined'
+                          endIcon={<PeopleIcon />}
+                          sx={{margin: '16px'}}
+                      >
+                        Друзья
+                      </Button>
                     </Box>
                     <Box
                         sx={{
@@ -106,101 +133,114 @@ export const Profile = () => {
                         }}
                     >
                       <Typography variant='h5' component='p' sx={{marginBottom: '16px'}}>
-                        {`${userData?.lastName} ${userData?.firstName}`}
+                        {`${curUser?.lastName} ${curUser?.firstName}`}
                       </Typography>
                       <Typography variant='h5' component='p' sx={{marginBottom: '16px'}}>
-                        {`Дата рождения: ${formatDate(userData?.birthday)}`}
+                        {`Дата рождения: ${formatDate(curUser?.birthday)}`}
                       </Typography>
                       <Typography variant='h5' component='p' sx={{marginBottom: '16px'}}>
-                        {`Возраст: ${convertDateToAge(userData?.birthday)}`}
+                        {`Возраст: ${convertDateToAge(curUser?.birthday)}`}
                       </Typography>
-                      {userData?.city
-                          ?
+                      {curUser?.city &&
                           <Typography variant='h5' component='p' sx={{marginBottom: '16px'}}>
-                            {`Город: ${userData?.city}`}
+                            {`Город: ${curUser?.city}`}
                           </Typography>
-                          : null
                       }
-                      {userData?.uniOrJob
-                          ?
-                          <Typography variant='h5' component='p'>
-                            {`Вуз/Место работы: ${userData?.uniOrJob}`}
+                      {curUser?.uniOrJob &&
+                          <Typography variant='h5' component='p' sx={{marginBottom: '16px'}}>
+                            {`Вуз/Место работы: ${curUser?.uniOrJob}`}
                           </Typography>
-                          : null
+                      }
+                      {isMyProfile &&
+                          <IconButton
+                              color='primary'
+                              onClick={goToEditProfile}
+                          >
+                            <EditIcon />
+                          </IconButton>
                       }
                     </Box>
                   </Box>
-                  <Divider />
+                  {isMyProfile &&
+                      <>
+                        <Divider />
+                        <Box
+                            sx={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'flex-start',
+                              alignItems: 'center',
+                              margin: '16px',
+                            }}
+                        >
+                          <form onSubmit={handleSubmit}>
+                            <Typography color={theme.palette.primary.main} variant='h5' component='p'
+                                        sx={{margin: '16px'}}>
+                              Что у вас нового?
+                            </Typography>
+                            <TextField
+                                multiline={true}
+                                rows={6}
+                                fullWidth
+                                inputProps={{maxLength: 50}}
+                                autoComplete='off'
+                                placeholder='Текст вашего поста...'
+                                id='postInput'
+                                name='postInput'
+                                value={values.postInput}
+                                onChange={handleChange}
+                                error={touched.postInput && Boolean(errors.postInput)}
+                                helperText={touched.postInput && errors.postInput}
+                                sx={{marginBottom: '16px', minWidth: '300px', width: '30vw'}}
+                                InputProps={{sx: {borderRadius: '20px'}}}
+                            />
+                            <Container
+                                sx={{
+                                  display: 'flex',
+                                  justifyContent: 'flex-end',
+                                  alignItems: 'center',
+                                  width: '100%',
+                                  padding: 0,
+                                }}
+                            >
+                              <Button
+                                  variant='contained'
+                                  size='small'
+                                  type='submit'
+                                  disabled={isSubmitting}
+                                  sx={{
+                                    textTransform: 'none',
+                                    fontSize: '16px',
+                                    margin: '16px',
+                                  }}
+                              >
+                                Опубликовать
+                              </Button>
+                            </Container>
+                          </form>
+                        </Box>
+                      </>
+                  }
+                  <Divider sx={{
+                    '& .MuiDivider-wrapper': {
+                      color: theme.palette.primary.main
+                    }
+                  }}
+                  >
+                    Стена
+                  </Divider>
                   <Box
                       sx={{
                         display: 'flex',
-                        justifyContent: 'space-evenly',
-                        alignItems: 'flex-start',
-                        flexWrap: 'wrap',
-                        margin: '16px 0',
+                        flexDirection: 'column',
+                        justifyContent: 'flex-start',
+                        alignItems: 'center',
+                        margin: '16px',
                       }}
                   >
-                    <Button
-                        variant='outlined'
-                        endIcon={<PeopleIcon />}
-                        sx={{margin: '16px'}}
-                    >
-                      Друзья
-                    </Button>
-                    <Box
-                        sx={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'flex-start',
-                          alignItems: 'center',
-                          margin: '0 16px',
-                        }}
-                    >
-                      <form onSubmit={handleSubmit}>
-                        <Typography color={theme.palette.primary.main} variant='h5' component='p'
-                                    sx={{margin: '16px'}}>
-                          Что у вас нового?
-                        </Typography>
-                        <TextField
-                            multiline={true}
-                            rows={6}
-                            fullWidth
-                            inputProps={{maxLength: 50}}
-                            autoComplete='off'
-                            placeholder='Текст вашего поста...'
-                            id='postInput'
-                            name='postInput'
-                            value={values.postInput}
-                            onChange={handleChange}
-                            error={touched.postInput && Boolean(errors.postInput)}
-                            helperText={touched.postInput && errors.postInput}
-                            sx={{marginBottom: '16px', minWidth: '300px', width: '30vw'}}
-                            InputProps={{sx: {borderRadius: '20px'}}}
-                        />
-                        <Container
-                            sx={{
-                              display: 'flex',
-                              justifyContent: 'flex-end',
-                              alignItems: 'center',
-                              width: '100%',
-                              padding: 0,
-                            }}
-                        >
-                          <Button
-                              variant='contained'
-                              size='small'
-                              type='submit'
-                              disabled={isSubmitting}
-                              sx={{
-                                textTransform: 'none',
-                                fontSize: '16px',
-                              }}
-                          >
-                            Опубликовать
-                          </Button>
-                        </Container>
-                      </form>
-                    </Box>
+                    <Typography variant='h5' component='p' sx={{margin: '16px'}}>
+                      Стена сейчас пустая
+                    </Typography>
                   </Box>
                 </>
             )

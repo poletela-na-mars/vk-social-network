@@ -29,9 +29,15 @@ export const fetchAuthMe: any = createAsyncThunk('auth/fetchAuthMe', async () =>
 });
 
 // @ts-ignore
-export const fetchUser: any = createAsyncThunk('auth/fetchUser', async ({ id }) => {
-  const { data } = await axios.get(`/user/${id}`);
-  return data;
+export const fetchUser: any = createAsyncThunk('auth/fetchUser', async ({id}) => {
+  return axios.get(`/user/${id}`)
+      .then((res) => {
+        return res.data;
+      })
+      .catch((err) => {
+        console.error(err.response.data);
+        return Promise.reject(JSON.stringify(err.response.data));
+      });
 });
 
 const initialState = {
