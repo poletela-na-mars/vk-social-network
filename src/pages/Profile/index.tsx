@@ -1,7 +1,7 @@
 import { useFormik } from 'formik';
 import { postValidationSchema } from './postValidationSchema';
-import { useEffect, useState } from 'react';
-import { fetchUser, selectIsAuth } from '../../redux/slices/auth';
+import { SetStateAction, useEffect, useState } from 'react';
+import { selectIsAuth } from '../../redux/slices/auth';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { convertDateToAge, formatDate } from '../../utils/date';
@@ -12,20 +12,26 @@ import { Loader } from '../../components';
 import PeopleIcon from '@mui/icons-material/People';
 import EditIcon from '@mui/icons-material/Edit';
 import styles from './Profile.module.scss';
+import { fetchUser } from '../../redux/slices/users';
+import { isDataLoading } from '../../utils/data';
+
+import { UserData } from '../../types/UserData';
 
 export const Profile = () => {
   const theme = useTheme();
 
-  const [curUser, setCurUserData] = useState<any>();
+  const [curUser, setCurUserData] = useState<UserData>();
 
   const {id} = useParams();
   const dispatch = useDispatch();
   const isAuth = useSelector(selectIsAuth);
+  const authData = useSelector((state: any) => state.auth.data);
   const navigate = useNavigate();
-  const userData = useSelector((state: any) => state.auth.data);
-  const isCurUserDataLoading = curUser === undefined || curUser === null;
 
-  const isMyProfile = !isCurUserDataLoading && curUser?._id === userData?._id;
+  const isCurUserDataLoading = isDataLoading(curUser);
+  const isAuthDataLoading = isDataLoading(authData);
+
+  const isMyProfile = (!isCurUserDataLoading && !isAuthDataLoading) && curUser?._id === authData?._id;
 
   const {touched, errors, isSubmitting, handleSubmit, handleChange, values} = useFormik({
     initialValues: {
@@ -54,7 +60,7 @@ export const Profile = () => {
   });
 
   useEffect(() => {
-    dispatch(fetchUser({id})).then((res: { payload: object }) => setCurUserData(res.payload));
+    dispatch(fetchUser({id})).then((res: { payload: SetStateAction<UserData | undefined>; }) => setCurUserData(res.payload));
   }, []);
 
   if (!window.localStorage.getItem('token') && !isAuth) {
@@ -62,16 +68,16 @@ export const Profile = () => {
   }
 
   const goToEditProfilePage = () => {
-    navigate(`/user/${curUser._id}/edit`);
+    navigate(`/user/${curUser?._id}/edit`);
   };
 
   const goToFriendsPage = () => {
-    navigate(`/user/${curUser._id}/friends`);
+    navigate(`/user/${curUser?._id}/friends`);
   };
 
   return (
       <Container maxWidth='lg'>
-        {isCurUserDataLoading
+        {isCurUserDataLoading || isAuthDataLoading
             ? <Loader />
             : (
                 <>

@@ -1,11 +1,10 @@
 import { Route, Routes } from 'react-router-dom';
-
 import { useDispatch } from 'react-redux';
 import { useEffect } from 'react';
 import { fetchAuthMe } from './redux/slices/auth';
 
 import { Header } from './components';
-import { Login, Registration, NotFound, Profile, ProfileEdit, Friends } from './pages';
+import { Friends, Login, NotFound, Profile, ProfileEdit, Registration } from './pages';
 
 import { ThemeProvider } from '@mui/material';
 import { theme } from './theme';
@@ -19,7 +18,7 @@ const App = () => {
 
   return (
       <ThemeProvider theme={theme}>
-        <Header/>
+        <Header />
         <Routes>
           <Route path='*' element={<NotFound />} />
           <Route path='/' element={<NotFound />} />

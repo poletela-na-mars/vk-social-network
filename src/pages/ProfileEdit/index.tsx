@@ -1,4 +1,5 @@
 import { useFormik } from 'formik';
+import axios from '../../axios';
 import { SyntheticEvent, useEffect } from 'react';
 import { selectIsAuth } from '../../redux/slices/auth';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -10,7 +11,7 @@ import { NotFound } from '../NotFound';
 import { Loader } from '../../components';
 
 import { cities } from '../../data/russianCities';
-import axios from '../../axios';
+import { isDataLoading } from '../../utils/data';
 
 export const ProfileEdit = () => {
   const theme = useTheme();
@@ -18,8 +19,8 @@ export const ProfileEdit = () => {
   const {id} = useParams();
   const isAuth = useSelector(selectIsAuth);
   const navigate = useNavigate();
-  const userData = useSelector((state: any) => state.auth.data);
-  const isUserDataLoading = userData === undefined || userData === null;
+  const authData = useSelector((state: any) => state.auth.data);
+  const isAuthDataLoading = isDataLoading(authData);
 
   const {touched, errors, isSubmitting, handleSubmit, handleChange, values, setFieldValue} = useFormik({
     initialValues: {
@@ -44,20 +45,20 @@ export const ProfileEdit = () => {
   });
 
   useEffect(() => {
-    if (!isUserDataLoading) {
-      setFieldValue('firstName', userData?.firstName);
-      setFieldValue('lastName', userData?.lastName);
-      setFieldValue('city', userData?.city);
-      setFieldValue('uniOrJob', userData?.uniOrJob);
-      setFieldValue('avatarUrl', userData?.avatarUrl);
+    if (!isAuthDataLoading) {
+      setFieldValue('firstName', authData?.firstName);
+      setFieldValue('lastName', authData?.lastName);
+      setFieldValue('city', authData?.city);
+      setFieldValue('uniOrJob', authData?.uniOrJob);
+      setFieldValue('avatarUrl', authData?.avatarUrl);
     }
-  }, [isUserDataLoading]);
+  }, [isAuthDataLoading]);
 
   if (!window.localStorage.getItem('token') && !isAuth) {
     navigate('/login');
   }
 
-  if (!isUserDataLoading && id !== userData?._id) {
+  if (!isAuthDataLoading && id !== authData?._id) {
     return <NotFound />
   }
 
@@ -67,7 +68,7 @@ export const ProfileEdit = () => {
 
   return (
       <Container maxWidth='lg'>
-        {isUserDataLoading
+        {isAuthDataLoading
             ? <Loader />
             :
             <Box
