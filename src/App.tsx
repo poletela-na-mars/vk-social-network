@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { fetchAuthMe } from './redux/slices/auth';
 
 import { Header } from './components';
-import { Login, Registration, NotFound, Profile, ProfileEdit } from './pages';
+import { Login, Registration, NotFound, Profile, ProfileEdit, Friends } from './pages';
 
 import { ThemeProvider } from '@mui/material';
 import { theme } from './theme';
@@ -25,6 +25,7 @@ const App = () => {
           <Route path='/' element={<NotFound />} />
           <Route path='/login' element={<Login />} />
           <Route path='/register' element={<Registration />} />
+          <Route path='/user/:id/friends' element={<Friends />} />
           <Route path='/user/:id/edit' element={<ProfileEdit />} />
           <Route path='/user/:id' element={<Profile />} />
         </Routes>

@@ -1,14 +1,3 @@
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Container,
-  Divider,
-  IconButton,
-  TextField,
-  Typography,
-  useTheme
-} from '@mui/material';
 import { useFormik } from 'formik';
 import { postValidationSchema } from './postValidationSchema';
 import { useEffect, useState } from 'react';
@@ -16,6 +5,9 @@ import { fetchUser, selectIsAuth } from '../../redux/slices/auth';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { convertDateToAge, formatDate } from '../../utils/date';
+
+import { Box, Button, Container, Divider, IconButton, TextField, Typography, useTheme } from '@mui/material';
+import { Loader } from '../../components';
 
 import PeopleIcon from '@mui/icons-material/People';
 import EditIcon from '@mui/icons-material/Edit';
@@ -76,15 +68,7 @@ export const Profile = () => {
   return (
       <Container maxWidth='lg'>
         {isCurUserDataLoading
-            ? <Box
-                sx={{
-                  display: 'flex',
-                  height: 'calc(100vh - 60px)',
-                  justifyContent: 'center',
-                  alignItems: 'center'
-                }}>
-              <CircularProgress />
-            </Box>
+            ? <Loader />
             : (
                 <>
                   <Box
@@ -109,8 +93,22 @@ export const Profile = () => {
                       {isMyProfile
                           ?
                           <>
-                            <Button>Изменить фото</Button>
-                            <Button>Удалить фото</Button>
+                            <Button
+                                style={{
+                                  textTransform: 'none',
+                                  fontSize: '16px',
+                                }}
+                            >
+                              Изменить фото
+                            </Button>
+                            <Button
+                                style={{
+                                  textTransform: 'none',
+                                  fontSize: '16px',
+                                }}
+                            >
+                              Удалить фото
+                            </Button>
                           </>
                           :
                           <Button>Добавить в друзья</Button>

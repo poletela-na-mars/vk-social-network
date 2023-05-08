@@ -3,3 +3,4 @@ export * from './Registration';
 export * from './NotFound';
 export * from './Profile';
 export * from './ProfileEdit';
+export * from './Friends';

@@ -16,7 +16,7 @@ export const theme = createTheme({
     },
     h5: {
       fontWeight: 'normal',
-      fontSize: '18px',
+      fontSize: '16px',
     },
     button: {
       fontWeight: 'bold',

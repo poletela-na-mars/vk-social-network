@@ -5,8 +5,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { profileEditValidationSchema } from './profileEditValidationSchema';
 
-import { Autocomplete, Box, Button, CircularProgress, Container, TextField, Typography, useTheme } from '@mui/material';
+import { Autocomplete, Box, Button, Container, TextField, Typography, useTheme } from '@mui/material';
 import { NotFound } from '../NotFound';
+import { Loader } from '../../components';
 
 import { cities } from '../../data/russianCities';
 import axios from '../../axios';
@@ -67,16 +68,7 @@ export const ProfileEdit = () => {
   return (
       <Container maxWidth='lg'>
         {isUserDataLoading
-            ?
-            <Box
-                sx={{
-                  display: 'flex',
-                  height: 'calc(100vh - 60px)',
-                  justifyContent: 'center',
-                  alignItems: 'center'
-                }}>
-              <CircularProgress />
-            </Box>
+            ? <Loader />
             :
             <Box
                 sx={{
