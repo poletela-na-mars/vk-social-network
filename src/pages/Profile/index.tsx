@@ -61,8 +61,12 @@ export const Profile = () => {
     navigate('/login');
   }
 
-  const goToEditProfile = () => {
+  const goToEditProfilePage = () => {
     navigate(`/user/${curUser._id}/edit`);
+  };
+
+  const goToFriendsPage = () => {
+    navigate(`/user/${curUser._id}/friends`);
   };
 
   return (
@@ -89,7 +93,7 @@ export const Profile = () => {
                           margin: '16px 0',
                         }}>
                       <img className={styles.avatar} src={curUser?.avatarUrl || '/default-avatar.png'}
-                           alt={`${curUser?.lastName} ${curUser?.firstName}`} />
+                           alt={`${curUser?.firstName} ${curUser?.lastName}`} />
                       {isMyProfile
                           ?
                           <>
@@ -117,6 +121,7 @@ export const Profile = () => {
                           variant='outlined'
                           endIcon={<PeopleIcon />}
                           sx={{margin: '16px'}}
+                          onClick={goToFriendsPage}
                       >
                         Друзья
                       </Button>
@@ -131,7 +136,7 @@ export const Profile = () => {
                         }}
                     >
                       <Typography variant='h5' component='p' sx={{marginBottom: '16px'}}>
-                        {`${curUser?.lastName} ${curUser?.firstName}`}
+                        {`${curUser?.firstName} ${curUser?.lastName}`}
                       </Typography>
                       <Typography variant='h5' component='p' sx={{marginBottom: '16px'}}>
                         {`Дата рождения: ${formatDate(curUser?.birthday)}`}
@@ -152,7 +157,7 @@ export const Profile = () => {
                       {isMyProfile &&
                           <IconButton
                               color='primary'
-                              onClick={goToEditProfile}
+                              onClick={goToEditProfilePage}
                           >
                             <EditIcon />
                           </IconButton>

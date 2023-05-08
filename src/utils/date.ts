@@ -12,7 +12,11 @@ export const formatDate = (dateString: string) => {
   return `${padTo2Digits(day)}.${padTo2Digits(month)}.${year}`;
 };
 
+const wordAgeDeclination = (age: string) => /\d*1\d$/.test(age) || /[05-9]$/.test(age) ? 'лет' : ( /1$/.test(age) ? 'год' : 'года');
+
 // TODO - [TEST] - add test for it
 export const convertDateToAge = (timestamp: string) => {
-  return Math.floor(((new Date()).getTime() - new Date(timestamp).getTime()) / (1000 * 60 * 60 * 24 * 365));
+  const age = String(Math.floor(((new Date()).getTime() - new Date(timestamp).getTime()) / (1000 * 60 * 60 * 24 * 365)));
+  return `${age} ${wordAgeDeclination(age)}`;
 };
+
