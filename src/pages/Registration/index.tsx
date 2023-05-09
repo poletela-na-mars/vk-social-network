@@ -1,12 +1,14 @@
 import { SyntheticEvent } from 'react';
 import { useFormik } from 'formik';
+import { Link } from 'react-router-dom';
 import { registrationValidationSchema } from './registrationValidationSchema';
+import { LocalizationProvider, ruRU } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+
 import { Autocomplete, Box, Button, Container, TextField, Typography, useTheme } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider, ruRU } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+
 import { cities } from '../../data/russianCities';
-import { Link } from 'react-router-dom';
 
 export const Registration = () => {
   const theme = useTheme();
@@ -164,17 +166,8 @@ export const Registration = () => {
                     padding: 0,
                   }}
               >
-                <Link to='/login' style={{textDecoration: 'none'}}>
-                  <Typography display='inline'
-                              component='p'
-                              color='lightgray'
-                              sx={{
-                                marginRight: '16px',
-                                '&:hover': {color: theme.palette.primary.main}
-                              }}
-                  >
-                    Есть аккаунт?
-                  </Typography>
+                <Link to='/login' style={{textDecoration: 'none', color: 'lightgray', marginRight: '16px'}}>
+                  Есть аккаунт?
                 </Link>
                 <Button
                     style={{

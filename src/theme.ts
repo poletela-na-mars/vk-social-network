@@ -23,7 +23,7 @@ export const theme = createTheme({
     },
   },
   shape: {
-    borderRadius: 50,
+    borderRadius: 20,
   },
   palette: {
     primary: {

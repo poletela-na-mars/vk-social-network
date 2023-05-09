@@ -116,17 +116,8 @@ export const Login = () => {
                     padding: 0,
                   }}
               >
-                <Link to='/register' style={{textDecoration: 'none'}}>
-                  <Typography display='inline'
-                              component='p'
-                              color='lightgray'
-                              sx={{
-                                marginRight: '16px',
-                                '&:hover': { color: theme.palette.primary.main }
-                              }}
-                  >
-                    Зарегистрироваться
-                  </Typography>
+                <Link to='/register' style={{textDecoration: 'none', color: 'lightgray', marginRight: '16px',}}>
+                  Зарегистрироваться
                 </Link>
                 <Button
                     style={{

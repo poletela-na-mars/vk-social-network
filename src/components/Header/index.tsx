@@ -7,6 +7,7 @@ export const Header = () => {
   const theme = useTheme();
 
   const dispatch = useDispatch();
+  // TODO - [WORK] - avoid re-calc (button Выйти дергается)
   const isAuth = useSelector(selectIsAuth);
 
   const handleLogoutButtonClick = () => {
@@ -15,7 +16,15 @@ export const Header = () => {
   };
 
   return (
-      <Container sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '60px', padding: '15px'}}>
+      <Container
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            height: '60px',
+            padding: '15px'
+          }}
+      >
         <Link to='/' style={{textDecoration: 'none'}}>
           <Typography display='inline' component='h1' variant='h1' color={theme.palette.primary.main}>
             Network

@@ -1,7 +1,8 @@
 import { useFormik } from 'formik';
+import axios from '../../axios';
 import { postValidationSchema } from './postValidationSchema';
-import { SetStateAction, useEffect, useState } from 'react';
-import { selectIsAuth } from '../../redux/slices/auth';
+import React, { SetStateAction, useEffect, useState } from 'react';
+import { fetchAuthMe, selectIsAuth } from '../../redux/slices/auth';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { convertDateToAge, formatDate } from '../../utils/date';
@@ -16,16 +17,19 @@ import { fetchUser } from '../../redux/slices/users';
 import { isDataLoading } from '../../utils/data';
 
 import { UserData } from '../../types/UserData';
+import { ADD_FRIEND, DELETE_FRIEND_OR_REQ } from '../../data/consts';
 
 export const Profile = () => {
   const theme = useTheme();
 
   const [curUser, setCurUserData] = useState<UserData>();
+  const [authData, setAuthData] = useState<UserData | undefined>();
+  const [actionWithFriendId, setActionWithFriendId] = useState<string>();
 
   const {id} = useParams();
   const dispatch = useDispatch();
   const isAuth = useSelector(selectIsAuth);
-  const authData = useSelector((state: any) => state.auth.data);
+  // const authData = useSelector((state: any) => state.auth.data);
   const navigate = useNavigate();
 
   const isCurUserDataLoading = isDataLoading(curUser);
@@ -61,18 +65,47 @@ export const Profile = () => {
 
   useEffect(() => {
     dispatch(fetchUser({id})).then((res: { payload: SetStateAction<UserData | undefined>; }) => setCurUserData(res.payload));
-  }, []);
+  }, [dispatch, id]);
+
+  useEffect(() => {
+    dispatch(fetchAuthMe())
+        .then((res: { payload: React.SetStateAction<UserData | undefined>; }) => setAuthData(res.payload));
+  }, [actionWithFriendId]);
 
   if (!window.localStorage.getItem('token') && !isAuth) {
     navigate('/login');
   }
 
   const goToEditProfilePage = () => {
-    navigate(`/user/${curUser?._id}/edit`);
+    navigate(`/user/${authData?._id}/edit`);
   };
 
   const goToFriendsPage = () => {
     navigate(`/user/${curUser?._id}/friends`);
+  };
+
+  const isMyFriend = (friendId: string | undefined) => {
+    return authData?.friends.includes(friendId as never);
+  };
+
+  const isReqSent = (friendId: string | undefined) => {
+    return authData?.outFriendsReq.includes(friendId as never);
+  };
+
+  const handleAddReqOrDeleteFriendButtonClick = async (friendId: string | undefined) => {
+    try {
+      if (friendId !== undefined) {
+        if (isMyFriend(friendId) || isReqSent(friendId)) {
+          await axios.delete(`/user/${authData?._id}/friend/${friendId}`);
+          setActionWithFriendId(DELETE_FRIEND_OR_REQ);
+        } else {
+          await axios.put(`/user/${authData?._id}/friend/${friendId}`);
+          setActionWithFriendId(ADD_FRIEND);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
@@ -121,7 +154,9 @@ export const Profile = () => {
                             </Button>
                           </>
                           :
-                          <Button>Добавить в друзья</Button>
+                          <Button onClick={() => handleAddReqOrDeleteFriendButtonClick(curUser?._id)}>
+                            {isMyFriend(curUser?._id) ? 'Удалить из друзей' : (isReqSent(curUser?._id) ? 'Отменить заявку' :'Добавить в друзья')}
+                          </Button>
                       }
                       <Button
                           variant='outlined'

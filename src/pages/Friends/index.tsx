@@ -1,5 +1,5 @@
 import React, { SetStateAction, useEffect, useState } from 'react';
-import { selectIsAuth } from '../../redux/slices/auth';
+import { fetchAuthMe, selectIsAuth } from '../../redux/slices/auth';
 import { fetchUser, fetchUsers } from '../../redux/slices/users';
 import { isDataLoading } from '../../utils/data';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -14,8 +14,10 @@ import { UserData } from '../../types/UserData';
 export const Friends = () => {
   const [userData, setUserData] = useState<UserData | undefined>();
   const [usersData, setUsersData] = useState<UserData[] | undefined>();
+  const [authData, setAuthData] = useState<UserData | undefined>();
   const [tabValue, setTabValue] = useState<string>('friends');
   const [searchReq, setSearchReq] = useState<string>('');
+  const [actionWithFriendId, setActionWithFriendId] = useState<string>();
 
   const {id} = useParams();
   const useQuery = () => new URLSearchParams(useLocation().search);
@@ -23,7 +25,6 @@ export const Friends = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const isAuth = useSelector(selectIsAuth);
-  const authData = useSelector((state: any) => state.auth.data);
 
   const isUsersDataLoading = isDataLoading(usersData);
   const isUserDataLoading = isDataLoading(userData);
@@ -35,17 +36,23 @@ export const Friends = () => {
 
   const areMyFriends = (!isUserDataLoading && !isAuthDataLoading) && userData?._id === authData?._id;
 
-  console.log(areMyFriends);
-
   const section = query.get('section');
   const act = query.get('act');
 
   useEffect(() => {
     dispatch(fetchUser({id}))
         .then((res: { payload: React.SetStateAction<UserData | undefined>; }) => setUserData(res.payload));
+  }, [id]);
+
+  useEffect(() => {
     dispatch(fetchUsers({id, section, act}))
         .then((res: { payload: React.SetStateAction<UserData[] | undefined>; }) => setUsersData(res.payload));
-  }, []);
+  }, [id, section, act, actionWithFriendId]);
+
+  useEffect(() => {
+    dispatch(fetchAuthMe())
+        .then((res: { payload: React.SetStateAction<UserData | undefined>; }) => setAuthData(res.payload));
+  }, [actionWithFriendId]);
 
   useEffect(() => {
     switch (tabValue) {
@@ -53,7 +60,7 @@ export const Friends = () => {
         navigate(`/user/${id}/friends`);
         break;
       case 'requests':
-        navigate(`/user/${id}/friends?section=all_requests`);
+        navigate(`/user/${authData?._id}/friends?section=all_requests`);
         break;
       case 'people':
         navigate(`/user/${id}/friends?act=find`);
@@ -69,6 +76,10 @@ export const Friends = () => {
     setTabValue(value);
   };
 
+  const peopleListUpdateData = (value: string): void => {
+    setActionWithFriendId(value);
+  };
+
   return (
       isUsersDataLoading || isUserDataLoading || isAuthDataLoading
           ? <Loader />
@@ -81,7 +92,9 @@ export const Friends = () => {
                   padding: '15px'
                 }}
             >
-              <PeopleList section={section} usersData={usersData} areMyFriends={areMyFriends} authDataId={authData?._id} />
+              <PeopleList searchReq={searchReq} peopleListUpdateData={peopleListUpdateData}
+                          section={section} usersData={usersData}
+                          areMyFriends={areMyFriends} authData={authData} />
               <Divider orientation='vertical' flexItem />
               <Box sx={{display: 'flex', flexDirection: 'column', marginLeft: '16px'}}>
                 <TextField
