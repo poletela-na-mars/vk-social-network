@@ -12,3 +12,11 @@
   margin-bottom: 16px !important;
   //font-weight: bold;
 }
+
+.profileLink {
+  text-decoration: none;
+
+  &:hover {
+    color: #3366FF !important;
+  }
+}

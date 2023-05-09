@@ -12,4 +12,11 @@
   margin-bottom: 16px !important;
 }
 
+.profileLink {
+  text-decoration: none;
+}
+.profileLink:hover {
+  color: #3366FF !important;
+}
+
 /*# sourceMappingURL=Friends.module.css.map */

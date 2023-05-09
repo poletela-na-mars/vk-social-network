@@ -5,7 +5,7 @@ import { isDataLoading } from '../../utils/data';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Box, Container, InputAdornment, Tab, Tabs, TextField } from '@mui/material';
+import { Box, Container, Divider, InputAdornment, Tab, Tabs, TextField } from '@mui/material';
 import { Loader, PeopleList } from '../../components';
 import { Search } from '@mui/icons-material';
 
@@ -81,7 +81,8 @@ export const Friends = () => {
                   padding: '15px'
                 }}
             >
-              <PeopleList section={section} usersData={usersData} areMyFriends={areMyFriends} />
+              <PeopleList section={section} usersData={usersData} areMyFriends={areMyFriends} authDataId={authData?._id} />
+              <Divider orientation='vertical' flexItem />
               <Box sx={{display: 'flex', flexDirection: 'column', marginLeft: '16px'}}>
                 <TextField
                     name='searchField'
