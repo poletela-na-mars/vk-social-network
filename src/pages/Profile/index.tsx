@@ -4,13 +4,15 @@ import { postValidationSchema } from './postValidationSchema';
 import React, { SetStateAction, useEffect, useRef, useState } from 'react';
 import { fetchAuthMe, selectIsAuth } from '../../redux/slices/auth';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, useParams } from 'react-router-dom';
-import { convertDateToAge, formatDate } from '../../utils/date';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { fetchUser } from '../../redux/slices/users';
+
+import { convertDateToAge, formatDate, formatDateWithTime } from '../../utils/date';
 import { isDataLoading } from '../../utils/data';
-import { ADD_FRIEND, DELETE_FRIEND_OR_REQ } from '../../data/consts';
+import { ADD_FRIEND, DELETE_FRIEND_OR_REQ, Mode } from '../../data/consts';
 
 import { Box, Button, Container, Divider, IconButton, TextField, Typography, useTheme } from '@mui/material';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import { Loader } from '../../components';
 
 import PeopleIcon from '@mui/icons-material/People';
@@ -18,6 +20,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import styles from './Profile.module.scss';
 
 import { UserData } from '../../types/UserData';
+import { fetchPosts } from '../../redux/slices/posts';
+import { PostType } from '../../types/PostType';
 
 export const Profile = () => {
   const theme = useTheme();
@@ -25,7 +29,9 @@ export const Profile = () => {
   const [curUser, setCurUserData] = useState<UserData>();
   const [authData, setAuthData] = useState<UserData | undefined>();
   const [actionWithFriendId, setActionWithFriendId] = useState<string>();
+  const [like, setLike] = useState<string>();
   const [avatarUrlFromServ, setAvatarUrlFromServ] = useState();
+  const [posts, setPosts] = useState<PostType[] | undefined>();
 
   const inputFileRef = useRef<HTMLInputElement | null>(null);
 
@@ -37,29 +43,25 @@ export const Profile = () => {
   const isCurUserDataLoading = isDataLoading(curUser);
   const isAuthDataLoading = isDataLoading(authData);
 
+  const mode = Mode.My;
+
   const isMyProfile = (!isCurUserDataLoading && !isAuthDataLoading) && curUser?._id === authData?._id;
 
   const {touched, errors, isSubmitting, handleSubmit, handleChange, values} = useFormik({
     initialValues: {
-      postInput: '',
+      text: '',
     },
     enableReinitialize: true,
     validateOnChange: true,
     validationSchema: postValidationSchema,
     onSubmit: async (values, {resetForm}) => {
-      // try {
-      //   const data = await dispatch(fetchAuth(values));
-      //
-      //   if (data.meta.requestStatus === 'rejected') {
-      //     await Promise.reject(data.error.message);
-      //   } else if ('token' in data?.payload) {
-      //     window.localStorage.setItem('token', data.payload.token);
-      //   }
-      // } catch (err) {
-      //   console.log(err);
-      //   // TODO - [WORK] - add error messaging
-      //   // setError('LoginError', { type: 'custom', message: err });
-      // }
+      try {
+        await axios.post(`/posts`, values);
+      } catch (err) {
+        console.log(err);
+        // TODO - [WORK] - add error messaging
+        // TODO - [WORK] - add image upload
+      }
       console.log(values);
       resetForm({});
     },
@@ -74,6 +76,11 @@ export const Profile = () => {
     dispatch(fetchAuthMe())
         .then((res: { payload: React.SetStateAction<UserData | undefined>; }) => setAuthData(res.payload));
   }, [actionWithFriendId]);
+
+  useEffect(() => {
+    dispatch(fetchPosts({id, mode}))
+        .then((res: { payload: React.SetStateAction<PostType[] | undefined>; }) => setPosts(res.payload));
+  }, [id, isSubmitting, like]);
 
   if (!window.localStorage.getItem('token') && !isAuth) {
     navigate('/login');
@@ -172,6 +179,11 @@ export const Profile = () => {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleLikeClick = async (postId: string) => {
+    await axios.patch(`/posts/${postId}`);
+    setLike(postId);
   };
 
   return (
@@ -302,12 +314,12 @@ export const Profile = () => {
                                 inputProps={{maxLength: 50}}
                                 autoComplete='off'
                                 placeholder='Текст вашего поста...'
-                                id='postInput'
-                                name='postInput'
-                                value={values.postInput}
+                                id='text'
+                                name='text'
+                                value={values.text}
                                 onChange={handleChange}
-                                error={touched.postInput && Boolean(errors.postInput)}
-                                helperText={touched.postInput && errors.postInput}
+                                error={touched.text && Boolean(errors.text)}
+                                helperText={touched.text && errors.text}
                                 sx={{marginBottom: '16px', minWidth: '300px', width: '30vw'}}
                                 InputProps={{sx: {borderRadius: '20px'}}}
                             />
@@ -350,14 +362,57 @@ export const Profile = () => {
                       sx={{
                         display: 'flex',
                         flexDirection: 'column',
-                        justifyContent: 'flex-start',
-                        alignItems: 'center',
-                        margin: '16px',
+                        justifyContent: 'center',
+                        alignItems: 'flex-start',
+                        margin: '16px 0',
                       }}
                   >
-                    <Typography variant='h5' component='p' sx={{margin: '16px'}}>
-                      Стена сейчас пустая
-                    </Typography>
+                    {
+                      posts?.length !== 0
+                          ? posts?.map((post) =>
+                              <Box key={post._id} sx={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'center',
+                                alignItems: 'flex-start'
+                              }}>
+                                <Container disableGutters
+                                           sx={{display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-start'}}>
+                                  <img className={styles.avatarOnWall}
+                                       src={curUser?.avatarUrl ? `${process.env.REACT_APP_API_URL}${curUser?.avatarUrl}` :
+                                           '/default-avatar.png'}
+                                       alt={`${curUser?.firstName} ${curUser?.lastName}`} />
+                                  <Box
+                                      sx={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        justifyContent: 'center',
+                                        alignItems: 'flex-start',
+                                        marginLeft: '8px'
+                                      }}
+                                  >
+                                    <Link to={`/user/${curUser?._id}`} className={styles.profileLink}
+                                          style={{color: 'black', fontWeight: 'bold', marginBottom: '8px'}}>
+                                      {`${curUser?.firstName} ${curUser?.lastName}`}
+                                    </Link>
+                                    <Typography color='lightgray'>{formatDateWithTime(post.createdAt)}</Typography>
+                                  </Box>
+                                </Container>
+                                <Container disableGutters sx={{margin: '16px 0'}}>
+                                  <Typography>{post.text}</Typography>
+                                </Container>
+                                <Button
+                                    variant='outlined'
+                                    endIcon={<FavoriteIcon />}
+                                    onClick={() => handleLikeClick(post._id)}
+                                >
+                                  {post.likesCount}
+                                </Button>
+                              </Box>)
+                          : <Typography variant='h5' component='p' color='lightgray' sx={{margin: '16px'}}>
+                            Стена сейчас пустая
+                          </Typography>
+                    }
                   </Box>
                 </>
             )

@@ -93,7 +93,9 @@ export const PeopleList = (props: PeopleListProps) => {
                           marginBottom: '16px',
                         }}
                     >
-                      <img className={styles.avatar} src={user?.avatarUrl || '/default-avatar.png'}
+                      <img className={styles.avatar}
+                           src={user?.avatarUrl ? `${process.env.REACT_APP_API_URL}${user?.avatarUrl}` :
+                               '/default-avatar.png'}
                            alt={`${user?.firstName} ${user?.lastName}`} />
                       <Link to={`/user/${user?._id}`} className={styles.profileLink} style={{color: 'black'}}>
                         <Typography>

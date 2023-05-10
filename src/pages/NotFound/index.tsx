@@ -6,7 +6,6 @@ export const NotFound = () => {
       <Box className={styles.notFound}>
         <img
             className={styles.notFoundImg}
-            // style={{maxWidth: '330px', maxHeight: '330px', objectFit: 'contain'}}
             src='/not-found.png'
             alt='Not found page'
         />
