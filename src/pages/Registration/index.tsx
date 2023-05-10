@@ -1,9 +1,11 @@
 import { SyntheticEvent } from 'react';
 import { useFormik } from 'formik';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { registrationValidationSchema } from './registrationValidationSchema';
 import { LocalizationProvider, ruRU } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchRegister, selectIsAuth } from '../../redux/slices/auth';
 
 import { Autocomplete, Box, Button, Container, TextField, Typography, useTheme } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -12,6 +14,8 @@ import { cities } from '../../data/russianCities';
 
 export const Registration = () => {
   const theme = useTheme();
+  const isAuth = useSelector(selectIsAuth);
+  const dispatch = useDispatch();
 
   const {touched, errors, isSubmitting, handleSubmit, handleChange, values, setFieldValue} = useFormik({
     initialValues: {
@@ -26,10 +30,24 @@ export const Registration = () => {
     enableReinitialize: true,
     validateOnChange: true,
     validationSchema: registrationValidationSchema,
-    onSubmit: (values: object) => {
-      alert(JSON.stringify(values, null, 2));
+    onSubmit: async (values: object) => {
+      try {
+        const data = await dispatch(fetchRegister(values));
+
+        if (data.meta.requestStatus === 'rejected') {
+          await Promise.reject(data.error.message);
+        } else if ('token' in data?.payload) {
+          window.localStorage.setItem('token', data.payload.token);
+        }
+      } catch (err) {
+        console.error(err);
+      }
     },
   });
+
+  if (isAuth) {
+    return <Navigate to='/login' />;
+  }
 
   const handleCityChange = (event: SyntheticEvent<Element, Event>, value: string | null) => {
     setFieldValue('city', value);

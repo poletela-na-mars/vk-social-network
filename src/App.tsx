@@ -20,7 +20,7 @@ const App = () => {
       <ThemeProvider theme={theme}>
         <Header />
         <Routes>
-          <Route path='/' element={<Feed />} />
+          <Route path='/' element={<Login />} />
           <Route path='*' element={<NotFound />} />
           <Route path='/login' element={<Login />} />
           <Route path='/register' element={<Registration />} />

@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useFormik } from 'formik';
 import { loginValidationSchema } from './loginValidationSchema';
 
-import { fetchAuth, selectIsAuth } from '../../redux/slices/auth';
+import { fetchAuth, fetchAuthMe, selectIsAuth } from '../../redux/slices/auth';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, Navigate } from 'react-router-dom';
@@ -11,11 +11,16 @@ import { Box, Button, Container, IconButton, InputAdornment, TextField, Typograp
 import { VisibilityOff, Visibility } from '@mui/icons-material';
 
 import './Login.module.scss';
+import { UserData } from '../../types/UserData';
+import { isDataLoading } from '../../utils/data';
 
 export const Login = () => {
   const [passwordVisibility, setPasswordVisibility] = useState(false);
+  const [authData, setAuthData] = useState<UserData | undefined>();
   const isAuth = useSelector(selectIsAuth);
   const dispatch = useDispatch();
+
+  const isAuthDataLoading = isDataLoading(authData);
 
   const theme = useTheme();
 
@@ -37,15 +42,22 @@ export const Login = () => {
           window.localStorage.setItem('token', data.payload.token);
         }
       } catch (err) {
-        console.log(err);
+        console.error(err);
         // TODO - [WORK] - add error messaging
         // setError('LoginError', { type: 'custom', message: err });
       }
-    },
+    }
   });
 
-  if (isAuth) {
-    return <Navigate to='/' />;
+  useEffect(() => {
+    if (isAuth) {
+      dispatch(fetchAuthMe())
+          .then((res: { payload: React.SetStateAction<UserData | undefined>; }) => setAuthData(res.payload));
+    }
+  }, [isAuth, isAuthDataLoading]);
+
+  if (isAuth && !isAuthDataLoading) {
+    return <Navigate to={`/user/${authData?._id}`} />;
   }
 
   const handlePasswordVisibilityClick = () => {
