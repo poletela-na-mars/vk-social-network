@@ -1,11 +1,14 @@
 import { useFormik } from 'formik';
 import axios from '../../axios';
 import { postValidationSchema } from './postValidationSchema';
-import React, { SetStateAction, useEffect, useState } from 'react';
+import React, { SetStateAction, useEffect, useRef, useState } from 'react';
 import { fetchAuthMe, selectIsAuth } from '../../redux/slices/auth';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { convertDateToAge, formatDate } from '../../utils/date';
+import { fetchUser } from '../../redux/slices/users';
+import { isDataLoading } from '../../utils/data';
+import { ADD_FRIEND, DELETE_FRIEND_OR_REQ } from '../../data/consts';
 
 import { Box, Button, Container, Divider, IconButton, TextField, Typography, useTheme } from '@mui/material';
 import { Loader } from '../../components';
@@ -13,11 +16,8 @@ import { Loader } from '../../components';
 import PeopleIcon from '@mui/icons-material/People';
 import EditIcon from '@mui/icons-material/Edit';
 import styles from './Profile.module.scss';
-import { fetchUser } from '../../redux/slices/users';
-import { isDataLoading } from '../../utils/data';
 
 import { UserData } from '../../types/UserData';
-import { ADD_FRIEND, DELETE_FRIEND_OR_REQ } from '../../data/consts';
 
 export const Profile = () => {
   const theme = useTheme();
@@ -25,11 +25,13 @@ export const Profile = () => {
   const [curUser, setCurUserData] = useState<UserData>();
   const [authData, setAuthData] = useState<UserData | undefined>();
   const [actionWithFriendId, setActionWithFriendId] = useState<string>();
+  const [avatarUrlFromServ, setAvatarUrlFromServ] = useState();
+
+  const inputFileRef = useRef<HTMLInputElement | null>(null);
 
   const {id} = useParams();
   const dispatch = useDispatch();
   const isAuth = useSelector(selectIsAuth);
-  // const authData = useSelector((state: any) => state.auth.data);
   const navigate = useNavigate();
 
   const isCurUserDataLoading = isDataLoading(curUser);
@@ -64,8 +66,9 @@ export const Profile = () => {
   });
 
   useEffect(() => {
-    dispatch(fetchUser({id})).then((res: { payload: SetStateAction<UserData | undefined>; }) => setCurUserData(res.payload));
-  }, [dispatch, id]);
+    dispatch(fetchUser({id}))
+        .then((res: { payload: SetStateAction<UserData | undefined>; }) => setCurUserData(res.payload));
+  }, [dispatch, id, avatarUrlFromServ]);
 
   useEffect(() => {
     dispatch(fetchAuthMe())
@@ -108,6 +111,69 @@ export const Profile = () => {
     }
   };
 
+  const uploadAvatar = async (file: Blob) => {
+    if (file) {
+      const formData = new FormData();
+      console.log(file);
+      formData.append('image', file);
+      const {data} = await axios.post('/upload', formData);
+
+      return data;
+    }
+
+    return null;
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const target = event.target as HTMLInputElement;
+      const files = target.files;
+      if (files !== null) {
+        const targetFile = files[0];
+        if (targetFile.type !== 'image/jpeg' && targetFile.type !== 'image/png') {
+          throw new Error('Недопустимый формат файла.');
+        }
+
+        const reFileName = /^[А-яёЁ a-zA-Z0-9_-]{1,80}\.[a-zA-Z]{1,8}$/;
+        if (!reFileName.test(targetFile.name)) {
+          throw new Error('Недопустимое имя или расширение файла.');
+        }
+
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        const minSize = 5 * 1024;
+        if (targetFile.size >= maxSize || targetFile.size <= minSize) {
+          throw new Error('Изображение слишком большое или слишком маленькое.');
+        }
+
+        const data = await uploadAvatar(targetFile);
+        await axios.patch(`/user/${id}`, data);
+        setAvatarUrlFromServ(data);
+        event.target.files = null;
+        event.target.value = '';
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    try {
+      axios.delete(`/upload/removeAvatar`, {data: {avatarUrl: curUser?.avatarUrl}})
+          .catch((err) => {
+            console.error(err.response.data.message);
+            return Promise.reject(err.response.data.message);
+          });
+      axios.patch(`/user/${id}`, {avatarUrl: ''})
+          .catch((err) => {
+            console.error(err.response.data.message);
+            return Promise.reject(err.response.data.message);
+          });
+      setAvatarUrlFromServ(undefined);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
       <Container maxWidth='lg'>
         {isCurUserDataLoading || isAuthDataLoading
@@ -131,7 +197,9 @@ export const Profile = () => {
                           alignItems: 'center',
                           margin: '16px 0',
                         }}>
-                      <img className={styles.avatar} src={curUser?.avatarUrl || '/default-avatar.png'}
+                      <img className={styles.avatar}
+                           src={curUser?.avatarUrl ? `${process.env.REACT_APP_API_URL}${curUser?.avatarUrl}` :
+                               '/default-avatar.png'}
                            alt={`${curUser?.firstName} ${curUser?.lastName}`} />
                       {isMyProfile
                           ?
@@ -141,21 +209,26 @@ export const Profile = () => {
                                   textTransform: 'none',
                                   fontSize: '16px',
                                 }}
+                                onClick={() => inputFileRef.current?.click()}
                             >
                               Изменить фото
                             </Button>
+                            <input ref={inputFileRef} type='file' onChange={(e) => handleFileChange(e)} hidden />
                             <Button
                                 style={{
                                   textTransform: 'none',
                                   fontSize: '16px',
                                 }}
+                                onClick={handleRemoveAvatar}
+                                disabled={!curUser?.avatarUrl}
                             >
                               Удалить фото
                             </Button>
                           </>
                           :
                           <Button onClick={() => handleAddReqOrDeleteFriendButtonClick(curUser?._id)}>
-                            {isMyFriend(curUser?._id) ? 'Удалить из друзей' : (isReqSent(curUser?._id) ? 'Отменить заявку' :'Добавить в друзья')}
+                            {isMyFriend(curUser?._id) ? 'Удалить из друзей' :
+                                (isReqSent(curUser?._id) ? 'Отменить заявку' : 'Добавить в друзья')}
                           </Button>
                       }
                       <Button
@@ -176,22 +249,22 @@ export const Profile = () => {
                           margin: '16px 16px',
                         }}
                     >
-                      <Typography variant='h5' component='p' sx={{marginBottom: '16px'}}>
+                      <Typography align='center' variant='h5' component='p' sx={{marginBottom: '16px'}}>
                         {`${curUser?.firstName} ${curUser?.lastName}`}
                       </Typography>
-                      <Typography variant='h5' component='p' sx={{marginBottom: '16px'}}>
+                      <Typography align='center' variant='h5' component='p' sx={{marginBottom: '16px'}}>
                         {`Дата рождения: ${formatDate(curUser?.birthday)}`}
                       </Typography>
-                      <Typography variant='h5' component='p' sx={{marginBottom: '16px'}}>
+                      <Typography align='center' variant='h5' component='p' sx={{marginBottom: '16px'}}>
                         {`Возраст: ${convertDateToAge(curUser?.birthday)}`}
                       </Typography>
                       {curUser?.city &&
-                          <Typography variant='h5' component='p' sx={{marginBottom: '16px'}}>
+                          <Typography align='center' variant='h5' component='p' sx={{marginBottom: '16px'}}>
                             {`Город: ${curUser?.city}`}
                           </Typography>
                       }
                       {curUser?.uniOrJob &&
-                          <Typography variant='h5' component='p' sx={{marginBottom: '16px'}}>
+                          <Typography align='center' variant='h5' component='p' sx={{marginBottom: '16px'}}>
                             {`Вуз/Место работы: ${curUser?.uniOrJob}`}
                           </Typography>
                       }
