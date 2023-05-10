@@ -1,6 +1,6 @@
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { selectIsAuth } from '../../redux/slices/auth';
+import { fetchAuthMe, selectIsAuth } from '../../redux/slices/auth';
 import React, { useEffect, useState } from 'react';
 import { fetchPosts } from '../../redux/slices/posts';
 
@@ -9,6 +9,7 @@ import { Container } from '@mui/material';
 
 import { UserData } from '../../types/UserData';
 import { Mode } from '../../data/consts';
+import { Loader } from '../../components';
 
 export const Feed = () => {
   const dispatch = useDispatch();
@@ -35,11 +36,18 @@ export const Feed = () => {
     }
   }, [isAuthDataLoading, arePostsLoading])
 
+  useEffect(() => {
+    dispatch(fetchAuthMe());
+  }, []);
+
   // TODO - Функциональность ленты не доделана, на стене пользователя есть баги. Полноценная логика - Друзья, Поиск друзей,
   //  Авторизация, Регистрация, Загрузка/Удаление аватара, Создание поста
   return (
       <Container maxWidth='lg'>
-        <Navigate to={`/user/${id}`} />
+        { isAuthDataLoading
+            ? <Loader />
+            : <Navigate to={`/user/${id}`} />
+        }
         {/*{isAuthDataLoading || arePostsLoading*/}
         {/*    ? <Loader />*/}
         {/*    :*/}
