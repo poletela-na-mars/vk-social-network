@@ -1,0 +1,10 @@
+version: "3.0"
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: "vk-network-frontend"
+    ports:
+      - "3000:3000"

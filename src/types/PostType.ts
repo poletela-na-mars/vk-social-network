@@ -1,7 +1,7 @@
 export interface PostType {
   _id: string;
   text: string;
-  likesCount: string;
+  likes: [];
   user: string;
   imageUrl: string;
   createdAt: string;

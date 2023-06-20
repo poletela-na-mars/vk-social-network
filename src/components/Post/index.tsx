@@ -20,7 +20,7 @@ export const Post = (props: PostProps) => {
   const dispatch = useDispatch();
   const [post, setPost] = useState<PostType | undefined>();
   const [user, setUser] = useState<UserData | undefined>();
-  const [like, setLike] = useState<string>();
+  const [like, setLike] = useState<boolean>(false);
 
   const isDataLoading = post === undefined || user === undefined;
 
@@ -35,7 +35,7 @@ export const Post = (props: PostProps) => {
 
   const handleLikeClick = async (postId: string | undefined) => {
     await axios.patch(`/posts/${postId}`);
-    setLike(postId);
+    setLike(!like);
   };
 
   return (
@@ -78,7 +78,7 @@ export const Post = (props: PostProps) => {
                 endIcon={<FavoriteIcon />}
                 onClick={() => handleLikeClick(post?._id)}
             >
-              {post?.likesCount}
+              {post?.likes.length}
             </Button>
           </Box>
   );

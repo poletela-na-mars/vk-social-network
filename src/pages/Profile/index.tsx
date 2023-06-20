@@ -23,13 +23,15 @@ import { UserData } from '../../types/UserData';
 import { fetchPosts } from '../../redux/slices/posts';
 import { PostType } from '../../types/PostType';
 
+// TODO - [WORK] - avatars the same size
+
 export const Profile = () => {
   const theme = useTheme();
 
   const [curUser, setCurUserData] = useState<UserData>();
   const [authData, setAuthData] = useState<UserData | undefined>();
   const [actionWithFriendId, setActionWithFriendId] = useState<string>();
-  const [like, setLike] = useState<string>();
+  const [like, setLike] = useState<boolean>(false);
   const [avatarUrlFromServ, setAvatarUrlFromServ] = useState();
   const [posts, setPosts] = useState<PostType[] | undefined>();
 
@@ -183,7 +185,7 @@ export const Profile = () => {
 
   const handleLikeClick = async (postId: string) => {
     await axios.patch(`/posts/${postId}`);
-    setLike(postId);
+    setLike(!like);
   };
 
   return (
@@ -406,7 +408,7 @@ export const Profile = () => {
                                     endIcon={<FavoriteIcon />}
                                     onClick={() => handleLikeClick(post._id)}
                                 >
-                                  {post.likesCount}
+                                  {post?.likes.length}
                                 </Button>
                               </Box>)
                           : <Typography variant='h5' component='p' color='lightgray' sx={{margin: '16px'}}>
