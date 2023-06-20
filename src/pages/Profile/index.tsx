@@ -6,7 +6,7 @@ import { useFormik } from 'formik';
 import axios from '../../axios';
 
 import { postValidationSchema } from './postValidationSchema';
-import { fetchUser, updateUserData } from '../../redux/slices/users';
+import { addFriend, deleteFriend, fetchUser, updateUserData } from '../../redux/slices/users';
 import { fetchPosts, likePost } from '../../redux/slices/posts';
 
 import { convertDateToAge, formatDate, formatDateWithTime } from '../../utils/date';
@@ -84,22 +84,15 @@ export const Profile = () => {
     navigate(`/user/${user?._id}/friends`);
   };
 
-  const isMyFriend = (friendId: string | undefined) => {
-    return authUserData?.friends.includes(friendId as never);
-  };
-
-  const isReqSent = (friendId: string | undefined) => {
-    return authUserData?.outFriendsReq.includes(friendId as never);
-  };
+  const isMyFriend = user?.friends.includes(authUserData?._id as never);
+  const isReqSent = user?.inFriendsReq.includes(authUserData?._id as never);
 
   const handleAddReqOrDeleteFriendButtonClick = async (friendId: string | undefined) => {
     try {
-      if (friendId !== undefined) {
-        if (isMyFriend(friendId) || isReqSent(friendId)) {
-          await axios.delete(`/user/${authUserData?._id}/friend/${friendId}`);
-        } else {
-          await axios.put(`/user/${authUserData?._id}/friend/${friendId}`);
-        }
+      if (isMyFriend || isReqSent) {
+        await dispatch(deleteFriend({authUserData, friendId}));
+      } else {
+        await dispatch(addFriend({authUserData, friendId}));
       }
     } catch (err) {
       console.error(err);
@@ -222,8 +215,8 @@ export const Profile = () => {
                           </>
                           :
                           <Button onClick={() => handleAddReqOrDeleteFriendButtonClick(user?._id)}>
-                            {isMyFriend(user?._id) ? 'Удалить из друзей' :
-                                (isReqSent(user?._id) ? 'Отменить заявку' : 'Добавить в друзья')}
+                            {isMyFriend ? 'Удалить из друзей' :
+                                (isReqSent ? 'Отменить заявку' : 'Добавить в друзья')}
                           </Button>
                       }
                       <Button
