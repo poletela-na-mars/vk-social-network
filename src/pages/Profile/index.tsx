@@ -1,51 +1,51 @@
-import { useFormik } from 'formik';
-import axios from '../../axios';
-import { postValidationSchema } from './postValidationSchema';
-import React, { SetStateAction, useEffect, useRef, useState } from 'react';
-import { fetchAuthMe, selectIsAuth } from '../../redux/slices/auth';
+import React, { useEffect, useRef } from 'react';
+import { selectIsAuth } from '../../redux/slices/auth';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { fetchUser } from '../../redux/slices/users';
+import { useFormik } from 'formik';
+import axios from '../../axios';
+
+import { postValidationSchema } from './postValidationSchema';
+import { fetchUser, updateUserData } from '../../redux/slices/users';
+import { fetchPosts, likePost } from '../../redux/slices/posts';
 
 import { convertDateToAge, formatDate, formatDateWithTime } from '../../utils/date';
 import { isDataLoading } from '../../utils/data';
-import { ADD_FRIEND, DELETE_FRIEND_OR_REQ, Mode } from '../../data/consts';
+import { Mode } from '../../data/consts';
 
 import { Box, Button, Container, Divider, IconButton, TextField, Typography, useTheme } from '@mui/material';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import { Loader } from '../../components';
-
 import PeopleIcon from '@mui/icons-material/People';
 import EditIcon from '@mui/icons-material/Edit';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import styles from './Profile.module.scss';
 
+import { Loader } from '../../components';
+
 import { UserData } from '../../types/UserData';
-import { fetchPosts } from '../../redux/slices/posts';
 import { PostType } from '../../types/PostType';
 
 export const Profile = () => {
   const theme = useTheme();
 
-  const [curUser, setCurUserData] = useState<UserData>();
-  const [authData, setAuthData] = useState<UserData | undefined>();
-  const [actionWithFriendId, setActionWithFriendId] = useState<string>();
-  const [like, setLike] = useState<string>();
-  const [avatarUrlFromServ, setAvatarUrlFromServ] = useState();
-  const [posts, setPosts] = useState<PostType[] | undefined>();
-
   const inputFileRef = useRef<HTMLInputElement | null>(null);
 
   const {id} = useParams();
   const dispatch = useDispatch();
-  const isAuth = useSelector(selectIsAuth);
   const navigate = useNavigate();
-
-  const isCurUserDataLoading = isDataLoading(curUser);
-  const isAuthDataLoading = isDataLoading(authData);
 
   const mode = Mode.My;
 
-  const isMyProfile = (!isCurUserDataLoading && !isAuthDataLoading) && curUser?._id === authData?._id;
+  const isAuth = useSelector(selectIsAuth);
+  const authUserData = useSelector((state: { auth: { data: UserData } }) => state.auth.data);
+  const user = useSelector((state: { users: { user: UserData } }) => state.users.user);
+  const posts = useSelector((state: { posts: { posts: PostType[] } }) => state.posts.posts);
+
+  const isCurUserDataLoading = isDataLoading(user);
+  const isAuthDataLoading = isDataLoading(authUserData);
+
+  console.log(user)
+
+  const isMyProfile = (!isCurUserDataLoading && !isAuthDataLoading) && user?._id === authUserData?._id;
 
   const {touched, errors, isSubmitting, handleSubmit, handleChange, values} = useFormik({
     initialValues: {
@@ -68,49 +68,37 @@ export const Profile = () => {
   });
 
   useEffect(() => {
-    dispatch(fetchUser({id}))
-        .then((res: { payload: SetStateAction<UserData | undefined>; }) => setCurUserData(res.payload));
-  }, [dispatch, id, avatarUrlFromServ]);
-
-  useEffect(() => {
-    dispatch(fetchAuthMe())
-        .then((res: { payload: React.SetStateAction<UserData | undefined>; }) => setAuthData(res.payload));
-  }, [actionWithFriendId]);
-
-  useEffect(() => {
-    dispatch(fetchPosts({id, mode}))
-        .then((res: { payload: React.SetStateAction<PostType[] | undefined>; }) => setPosts(res.payload));
-  }, [id, isSubmitting, like]);
+    dispatch(fetchUser({id}));
+    dispatch(fetchPosts({id, mode}));
+  }, []);
 
   if (!window.localStorage.getItem('token') && !isAuth) {
     navigate('/login');
   }
 
   const goToEditProfilePage = () => {
-    navigate(`/user/${authData?._id}/edit`);
+    navigate(`/user/${authUserData?._id}/edit`);
   };
 
   const goToFriendsPage = () => {
-    navigate(`/user/${curUser?._id}/friends`);
+    navigate(`/user/${user?._id}/friends`);
   };
 
   const isMyFriend = (friendId: string | undefined) => {
-    return authData?.friends.includes(friendId as never);
+    return authUserData?.friends.includes(friendId as never);
   };
 
   const isReqSent = (friendId: string | undefined) => {
-    return authData?.outFriendsReq.includes(friendId as never);
+    return authUserData?.outFriendsReq.includes(friendId as never);
   };
 
   const handleAddReqOrDeleteFriendButtonClick = async (friendId: string | undefined) => {
     try {
       if (friendId !== undefined) {
         if (isMyFriend(friendId) || isReqSent(friendId)) {
-          await axios.delete(`/user/${authData?._id}/friend/${friendId}`);
-          setActionWithFriendId(DELETE_FRIEND_OR_REQ);
+          await axios.delete(`/user/${authUserData?._id}/friend/${friendId}`);
         } else {
-          await axios.put(`/user/${authData?._id}/friend/${friendId}`);
-          setActionWithFriendId(ADD_FRIEND);
+          await axios.put(`/user/${authUserData?._id}/friend/${friendId}`);
         }
       }
     } catch (err) {
@@ -121,7 +109,6 @@ export const Profile = () => {
   const uploadAvatar = async (file: Blob) => {
     if (file) {
       const formData = new FormData();
-      console.log(file);
       formData.append('image', file);
       const {data} = await axios.post('/upload', formData);
 
@@ -153,8 +140,7 @@ export const Profile = () => {
         }
 
         const data = await uploadAvatar(targetFile);
-        await axios.patch(`/user/${id}`, data);
-        setAvatarUrlFromServ(data);
+        await dispatch(updateUserData({id, data}));
         event.target.files = null;
         event.target.value = '';
       }
@@ -165,25 +151,22 @@ export const Profile = () => {
 
   const handleRemoveAvatar = async () => {
     try {
-      axios.delete(`/upload/removeAvatar`, {data: {avatarUrl: curUser?.avatarUrl}})
+      axios.delete(`/upload/removeAvatar`, {data: {avatarUrl: user?.avatarUrl}})
           .catch((err) => {
             console.error(err.response.data.message);
             return Promise.reject(err.response.data.message);
           });
-      axios.patch(`/user/${id}`, {avatarUrl: ''})
-          .catch((err) => {
-            console.error(err.response.data.message);
-            return Promise.reject(err.response.data.message);
-          });
-      setAvatarUrlFromServ(undefined);
+
+      const {data} = {data: {avatarUrl: ''}};
+      await dispatch(updateUserData({id, data}));
+
     } catch (err) {
       console.error(err);
     }
   };
 
   const handleLikeClick = async (postId: string) => {
-    await axios.patch(`/posts/${postId}`);
-    setLike(postId);
+    await dispatch(likePost({postId, posts}));
   };
 
   return (
@@ -210,9 +193,9 @@ export const Profile = () => {
                           margin: '16px 0',
                         }}>
                       <img className={styles.avatar}
-                           src={curUser?.avatarUrl ? `${process.env.REACT_APP_API_URL}${curUser?.avatarUrl}` :
+                           src={user?.avatarUrl ? `${process.env.REACT_APP_API_URL}${user?.avatarUrl}` :
                                '/default-avatar.png'}
-                           alt={`${curUser?.firstName} ${curUser?.lastName}`} />
+                           alt={`${user?.firstName} ${user?.lastName}`} />
                       {isMyProfile
                           ?
                           <>
@@ -232,15 +215,15 @@ export const Profile = () => {
                                   fontSize: '16px',
                                 }}
                                 onClick={handleRemoveAvatar}
-                                disabled={!curUser?.avatarUrl}
+                                disabled={!user?.avatarUrl}
                             >
                               Удалить фото
                             </Button>
                           </>
                           :
-                          <Button onClick={() => handleAddReqOrDeleteFriendButtonClick(curUser?._id)}>
-                            {isMyFriend(curUser?._id) ? 'Удалить из друзей' :
-                                (isReqSent(curUser?._id) ? 'Отменить заявку' : 'Добавить в друзья')}
+                          <Button onClick={() => handleAddReqOrDeleteFriendButtonClick(user?._id)}>
+                            {isMyFriend(user?._id) ? 'Удалить из друзей' :
+                                (isReqSent(user?._id) ? 'Отменить заявку' : 'Добавить в друзья')}
                           </Button>
                       }
                       <Button
@@ -262,22 +245,22 @@ export const Profile = () => {
                         }}
                     >
                       <Typography align='center' variant='h5' component='p' sx={{marginBottom: '16px'}}>
-                        {`${curUser?.firstName} ${curUser?.lastName}`}
+                        {`${user?.firstName} ${user?.lastName}`}
                       </Typography>
                       <Typography align='center' variant='h5' component='p' sx={{marginBottom: '16px'}}>
-                        {`Дата рождения: ${formatDate(curUser?.birthday)}`}
+                        {`Дата рождения: ${formatDate(user?.birthday)}`}
                       </Typography>
                       <Typography align='center' variant='h5' component='p' sx={{marginBottom: '16px'}}>
-                        {`Возраст: ${convertDateToAge(curUser?.birthday)}`}
+                        {`Возраст: ${convertDateToAge(user?.birthday)}`}
                       </Typography>
-                      {curUser?.city &&
+                      {user?.city &&
                           <Typography align='center' variant='h5' component='p' sx={{marginBottom: '16px'}}>
-                            {`Город: ${curUser?.city}`}
+                            {`Город: ${user?.city}`}
                           </Typography>
                       }
-                      {curUser?.uniOrJob &&
+                      {user?.uniOrJob &&
                           <Typography align='center' variant='h5' component='p' sx={{marginBottom: '16px'}}>
-                            {`Вуз/Место работы: ${curUser?.uniOrJob}`}
+                            {`Вуз/Место работы: ${user?.uniOrJob}`}
                           </Typography>
                       }
                       {isMyProfile &&
@@ -379,9 +362,9 @@ export const Profile = () => {
                                 <Container disableGutters
                                            sx={{display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-start'}}>
                                   <img className={styles.avatarOnWall}
-                                       src={curUser?.avatarUrl ? `${process.env.REACT_APP_API_URL}${curUser?.avatarUrl}` :
+                                       src={user?.avatarUrl ? `${process.env.REACT_APP_API_URL}${user?.avatarUrl}` :
                                            '/default-avatar.png'}
-                                       alt={`${curUser?.firstName} ${curUser?.lastName}`} />
+                                       alt={`${user?.firstName} ${user?.lastName}`} />
                                   <Box
                                       sx={{
                                         display: 'flex',
@@ -391,9 +374,9 @@ export const Profile = () => {
                                         marginLeft: '8px'
                                       }}
                                   >
-                                    <Link to={`/user/${curUser?._id}`} className={styles.profileLink}
+                                    <Link to={`/user/${user?._id}`} className={styles.profileLink}
                                           style={{color: 'black', fontWeight: 'bold', marginBottom: '8px'}}>
-                                      {`${curUser?.firstName} ${curUser?.lastName}`}
+                                      {`${user?.firstName} ${user?.lastName}`}
                                     </Link>
                                     <Typography color='lightgray'>{formatDateWithTime(post.createdAt)}</Typography>
                                   </Box>
@@ -406,7 +389,7 @@ export const Profile = () => {
                                     endIcon={<FavoriteIcon />}
                                     onClick={() => handleLikeClick(post._id)}
                                 >
-                                  {post.likesCount}
+                                  {post?.likes.length}
                                 </Button>
                               </Box>)
                           : <Typography variant='h5' component='p' color='lightgray' sx={{margin: '16px'}}>

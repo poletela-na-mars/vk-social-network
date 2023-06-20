@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from '../../axios';
+import { UserData } from '../../types/UserData';
 
 export const fetchAuth: any = createAsyncThunk('auth/fetchAuth', async (params) => {
   return axios.post('/auth/login', params)
@@ -81,7 +82,7 @@ const authSlice = createSlice({
   }
 });
 
-export const selectIsAuth = (state: any) => {
+export const selectIsAuth = (state: { auth: { data: UserData; }; }) => {
   return Boolean(state.auth.data);
 };
 
