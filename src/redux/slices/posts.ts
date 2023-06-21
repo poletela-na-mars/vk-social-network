@@ -1,11 +1,9 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from '../../axios';
 
-import { PostType } from '../../types/PostType';
-
 // @ts-ignore
-export const fetchPosts: any = createAsyncThunk('posts/fetchPosts', async ({mode}) => {
-  return axios.get('/posts', {params: {mode: mode}})
+export const fetchPosts: any = createAsyncThunk('posts/fetchPosts', async ({id, mode}) => {
+  return axios.get('/posts', {params: {mode: mode, id: id}})
       .then((res) => {
         return res.data;
       })
@@ -16,20 +14,8 @@ export const fetchPosts: any = createAsyncThunk('posts/fetchPosts', async ({mode
 });
 
 // @ts-ignore
-export const likePost: any = createAsyncThunk('posts/likePost', async ({postId, posts}) => {
-  return axios.patch(`/posts/${postId}`)
-      .then((res) => {
-        return posts.map((el: PostType) => (el._id === postId) && res.data);
-      })
-      .catch((err) => {
-        console.error(err.response.data);
-        return Promise.reject(JSON.stringify(err.response.data));
-      });
-});
-
-// @ts-ignore
-export const fetchPost: any = createAsyncThunk('posts/fetchPost', async ({id}) => {
-  return axios.get(`/posts/${id}`)
+export const postPost: any = createAsyncThunk('posts/postPost', async ({values}) => {
+  return axios.post(`/posts`, values)
       .then((res) => {
         return res.data;
       })
@@ -38,6 +24,18 @@ export const fetchPost: any = createAsyncThunk('posts/fetchPost', async ({id}) =
         return Promise.reject(JSON.stringify(err.response.data));
       });
 });
+
+// // @ts-ignore
+// export const fetchPost: any = createAsyncThunk('posts/fetchPost', async ({id}) => {
+//   return axios.get(`/posts/${id}`)
+//       .then((res) => {
+//         return res.data;
+//       })
+//       .catch((err) => {
+//         console.error(err.response.data);
+//         return Promise.reject(JSON.stringify(err.response.data));
+//       });
+// });
 
 const initialState = {
   post: null,
@@ -63,9 +61,14 @@ const postsSlice = createSlice({
       state.posts = [];
       state.postsStatus = 'error';
     },
-    [likePost.fulfilled]: (state, action) => {
-      state.posts = action.payload;
+
+    [postPost.fulfilled]: (state, action) => {
+      state.posts.unshift(action.payload as never);
       state.postsStatus = 'loaded';
+    },
+    [postPost.rejected]: (state) => {
+      state.posts = [];
+      state.postsStatus = 'error';
     }
   },
 });

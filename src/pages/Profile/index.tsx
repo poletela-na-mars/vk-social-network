@@ -1,25 +1,24 @@
 import React, { useEffect, useRef } from 'react';
 import { selectIsAuth } from '../../redux/slices/auth';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useFormik } from 'formik';
 import axios from '../../axios';
 
 import { postValidationSchema } from './postValidationSchema';
 import { addFriend, deleteFriend, fetchUser, updateUserData } from '../../redux/slices/users';
-import { fetchPosts, likePost } from '../../redux/slices/posts';
+import { fetchPosts, postPost } from '../../redux/slices/posts';
 
-import { convertDateToAge, formatDate, formatDateWithTime } from '../../utils/date';
+import { convertDateToAge, formatDate } from '../../utils/date';
 import { isDataLoading } from '../../utils/data';
 import { Mode } from '../../data/consts';
 
 import { Box, Button, Container, Divider, IconButton, TextField, Typography, useTheme } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import EditIcon from '@mui/icons-material/Edit';
-import FavoriteIcon from '@mui/icons-material/Favorite';
 import styles from './Profile.module.scss';
 
-import { Loader } from '../../components';
+import { Loader, Post } from '../../components';
 
 import { UserData } from '../../types/UserData';
 import { PostType } from '../../types/PostType';
@@ -42,21 +41,22 @@ export const Profile = () => {
 
   const isCurUserDataLoading = isDataLoading(user);
   const isAuthDataLoading = isDataLoading(authUserData);
-
-  console.log(user)
+  const isPostLoading = isDataLoading(posts);
 
   const isMyProfile = (!isCurUserDataLoading && !isAuthDataLoading) && user?._id === authUserData?._id;
 
   const {touched, errors, isSubmitting, handleSubmit, handleChange, values} = useFormik({
     initialValues: {
       text: '',
+      user: authUserData?._id,
     },
     enableReinitialize: true,
     validateOnChange: true,
     validationSchema: postValidationSchema,
     onSubmit: async (values, {resetForm}) => {
       try {
-        await axios.post(`/posts`, values);
+        await dispatch(postPost({values}));
+        // await axios.post(`/posts`, values);
       } catch (err) {
         console.log(err);
         // TODO - [WORK] - add error messaging
@@ -158,13 +158,9 @@ export const Profile = () => {
     }
   };
 
-  const handleLikeClick = async (postId: string) => {
-    await dispatch(likePost({postId, posts}));
-  };
-
   return (
       <Container maxWidth='lg'>
-        {isCurUserDataLoading || isAuthDataLoading
+        {isCurUserDataLoading || isAuthDataLoading || isPostLoading
             ? <Loader />
             : (
                 <>
@@ -345,46 +341,7 @@ export const Profile = () => {
                   >
                     {
                       posts?.length !== 0
-                          ? posts?.map((post) =>
-                              <Box key={post._id} sx={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'center',
-                                alignItems: 'flex-start'
-                              }}>
-                                <Container disableGutters
-                                           sx={{display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-start'}}>
-                                  <img className={styles.avatarOnWall}
-                                       src={user?.avatarUrl ? `${process.env.REACT_APP_API_URL}${user?.avatarUrl}` :
-                                           '/default-avatar.png'}
-                                       alt={`${user?.firstName} ${user?.lastName}`} />
-                                  <Box
-                                      sx={{
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        justifyContent: 'center',
-                                        alignItems: 'flex-start',
-                                        marginLeft: '8px'
-                                      }}
-                                  >
-                                    <Link to={`/user/${user?._id}`} className={styles.profileLink}
-                                          style={{color: 'black', fontWeight: 'bold', marginBottom: '8px'}}>
-                                      {`${user?.firstName} ${user?.lastName}`}
-                                    </Link>
-                                    <Typography color='lightgray'>{formatDateWithTime(post.createdAt)}</Typography>
-                                  </Box>
-                                </Container>
-                                <Container disableGutters sx={{margin: '16px 0'}}>
-                                  <Typography>{post.text}</Typography>
-                                </Container>
-                                <Button
-                                    variant='outlined'
-                                    endIcon={<FavoriteIcon />}
-                                    onClick={() => handleLikeClick(post._id)}
-                                >
-                                  {post?.likes.length}
-                                </Button>
-                              </Box>)
+                          ? posts.map((post) => <Post key={post._id} {...post} />)
                           : <Typography variant='h5' component='p' color='lightgray' sx={{margin: '16px'}}>
                             Стена сейчас пустая
                           </Typography>
