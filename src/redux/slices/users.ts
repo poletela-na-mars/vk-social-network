@@ -39,6 +39,9 @@ export const addFriend: any = createAsyncThunk('users/addFriend', async ({authUs
 
 // @ts-ignore
 export const deleteFriend: any = createAsyncThunk('users/deleteFriend', async ({authUserData, friendId}) => {
+  console.log('ОГОО');
+  console.log(authUserData);
+
   return axios.delete(`/user/${authUserData?._id}/friend/${friendId}`)
       .then((res) => {
         return res.data;
@@ -86,31 +89,31 @@ const usersSlice = createSlice({
       state.userStatus = 'error';
     },
 
-    // [addFriend.pending]: (state) => {
-    //   state.user = null;
-    //   state.userStatus = 'loading';
-    // },
+    [addFriend.pending]: (state) => {
+      state.user = null;
+      state.userStatus = 'loading';
+    },
     [addFriend.fulfilled]: (state, action) => {
       state.user = action.payload;
       state.userStatus = 'loaded';
     },
-    // [addFriend.rejected]: (state) => {
-    //   state.user = null;
-    //   state.userStatus = 'error';
-    // },
+    [addFriend.rejected]: (state) => {
+      state.user = null;
+      state.userStatus = 'error';
+    },
 
-    // [deleteFriend.pending]: (state) => {
-    //   state.user = null;
-    //   state.userStatus = 'loading';
-    // },
+    [deleteFriend.pending]: (state) => {
+      state.user = null;
+      state.userStatus = 'loading';
+    },
     [deleteFriend.fulfilled]: (state, action) => {
       state.user = action.payload;
       state.userStatus = 'loaded';
     },
-    // [deleteFriend.rejected]: (state) => {
-    //   state.user = null;
-    //   state.userStatus = 'error';
-    // },
+    [deleteFriend.rejected]: (state) => {
+      state.user = null;
+      state.userStatus = 'error';
+    },
 
     [updateUserData.pending]: (state) => {
       state.user = null;

@@ -1,20 +1,21 @@
-import React, { SetStateAction, useEffect, useState } from 'react';
-import { fetchAuthMe, selectIsAuth } from '../../redux/slices/auth';
-import { fetchUser, fetchUsers } from '../../redux/slices/users';
-import { isDataLoading } from '../../utils/data';
+import { SetStateAction, useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Box, Container, Divider, InputAdornment, Tab, Tabs, TextField } from '@mui/material';
+import { fetchAuthMe, selectIsAuth } from '../../redux/slices/auth';
+import { fetchUsers } from '../../redux/slices/users';
+
 import { Loader, PeopleList } from '../../components';
+
+import { Box, Container, InputAdornment, Tab, Tabs, TextField } from '@mui/material';
 import { Search } from '@mui/icons-material';
+
+import { isDataLoading } from '../../utils/data';
 
 import { UserData } from '../../types/UserData';
 
+// TODO - [WORK] - too much re-renders - optimize
 export const Friends = () => {
-  const [userData, setUserData] = useState<UserData | undefined>();
-  const [usersData, setUsersData] = useState<UserData[] | undefined>();
-  const [authData, setAuthData] = useState<UserData | undefined>();
   const [tabValue, setTabValue] = useState<string>('friends');
   const [searchReq, setSearchReq] = useState<string>('');
   const [actionWithFriendId, setActionWithFriendId] = useState<string>();
@@ -22,37 +23,33 @@ export const Friends = () => {
   const {id} = useParams();
   const useQuery = () => new URLSearchParams(useLocation().search);
   const query = useQuery();
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const isAuth = useSelector(selectIsAuth);
 
-  const isUsersDataLoading = isDataLoading(usersData);
-  const isUserDataLoading = isDataLoading(userData);
-  const isAuthDataLoading = isDataLoading(authData);
+  const isAuth = useSelector(selectIsAuth);
+  const authUserData = useSelector((state: { auth: { data: UserData } }) => state.auth.data);
+  const users = useSelector((state: { users: { users: UserData[] } }) => state.users.users);
+
+  const isUsersDataLoading = isDataLoading(users);
+  const isAuthDataLoading = isDataLoading(authUserData);
 
   if (!window.localStorage.getItem('token') && !isAuth) {
     navigate('/login');
   }
 
-  const areMyFriends = (!isUserDataLoading && !isAuthDataLoading) && userData?._id === authData?._id;
+  const areMyFriends = (!isAuthDataLoading && !isUsersDataLoading) && id === authUserData?._id;
 
   const section = query.get('section');
   const act = query.get('act');
 
   useEffect(() => {
-    dispatch(fetchUser({id}))
-        .then((res: { payload: React.SetStateAction<UserData | undefined>; }) => setUserData(res.payload));
-  }, [id]);
-
-  useEffect(() => {
-    dispatch(fetchUsers({id, section, act}))
-        .then((res: { payload: React.SetStateAction<UserData[] | undefined>; }) => setUsersData(res.payload));
-  }, [id, section, act, actionWithFriendId]);
-
-  useEffect(() => {
-    dispatch(fetchAuthMe())
-        .then((res: { payload: React.SetStateAction<UserData | undefined>; }) => setAuthData(res.payload));
+    dispatch(fetchAuthMe());
   }, [actionWithFriendId]);
+
+  useEffect(() => {
+    dispatch(fetchUsers({id, section, act}));
+  }, [section, act, actionWithFriendId]);
 
   useEffect(() => {
     switch (tabValue) {
@@ -60,7 +57,7 @@ export const Friends = () => {
         navigate(`/user/${id}/friends`);
         break;
       case 'requests':
-        navigate(`/user/${authData?._id}/friends?section=all_requests`);
+        navigate(`/user/${authUserData?._id}/friends?section=all_requests`);
         break;
       case 'people':
         navigate(`/user/${id}/friends?act=find`);
@@ -81,21 +78,19 @@ export const Friends = () => {
   };
 
   return (
-      isUsersDataLoading || isUserDataLoading || isAuthDataLoading
+      isUsersDataLoading || isAuthDataLoading
           ? <Loader />
           : <>
             <Container
                 sx={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'center',
+                  alignItems: 'flex-start',
                   padding: '15px'
                 }}
             >
               <PeopleList searchReq={searchReq} peopleListUpdateData={peopleListUpdateData}
-                          section={section} usersData={usersData}
-                          areMyFriends={areMyFriends} authData={authData} />
-              <Divider orientation='vertical' flexItem />
+                          section={section} usersData={users} areMyFriends={areMyFriends} authData={authUserData} />
               <Box sx={{display: 'flex', flexDirection: 'column', marginLeft: '16px'}}>
                 <TextField
                     name='searchField'

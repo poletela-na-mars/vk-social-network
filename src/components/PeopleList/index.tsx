@@ -1,19 +1,29 @@
-import axios from '../../axios';
-import { Box, Button, Container, Tab, Tabs, Typography } from '@mui/material';
-import { convertDateToAge } from '../../utils/date';
-import React, { SetStateAction, useEffect, useState } from 'react';
+import { SetStateAction, SyntheticEvent, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+
+import { addFriend, deleteFriend } from '../../redux/slices/users';
+
+import { Box, Button, Container, Tab, Tabs, Typography } from '@mui/material';
+import styles from '../../pages/Friends/Friends.module.scss';
+
+import { ADD_FRIEND, ALL_REQUESTS, DELETE_FRIEND_OR_REQ, OUT_REQUESTS } from '../../data/consts';
+import { convertDateToAge } from '../../utils/date';
 
 import { UserData } from '../../types/UserData';
 import { PeopleListProps } from '../../types/PeopleListProps';
-import { ADD_FRIEND, ALL_REQUESTS, DELETE_FRIEND_OR_REQ, OUT_REQUESTS } from '../../data/consts';
-
-import styles from '../../pages/Friends/Friends.module.scss';
 
 export const PeopleList = (props: PeopleListProps) => {
   const navigate = useNavigate();
-  const [requestTabValue, setRequestTabValue] = useState('all_requests');
+  const dispatch = useDispatch();
+  const [requestTabValue, setRequestTabValue] = useState(ALL_REQUESTS);
   const [usersDataToShow, setUsersDataToShow] = useState<UserData[] | undefined>();
+
+  useEffect(() => {
+    if (props.section === ALL_REQUESTS && props.section !== requestTabValue) {
+      setRequestTabValue(ALL_REQUESTS);
+    }
+  }, [props.section]);
 
   useEffect(() => {
     if (props.areMyFriends && props.section) {
@@ -40,7 +50,7 @@ export const PeopleList = (props: PeopleListProps) => {
     }
   }, [props.searchReq, props.usersData]);
 
-  const handleReqTabValueChange = (event: React.SyntheticEvent, value: React.SetStateAction<string>) => {
+  const handleReqTabValueChange = (event: SyntheticEvent, value: SetStateAction<string>) => {
     setRequestTabValue(value);
   };
 
@@ -54,13 +64,14 @@ export const PeopleList = (props: PeopleListProps) => {
 
   const handleAddReqOrDeleteFriendButtonClick = async (friendId: string) => {
     try {
+      const authUserData = props.authData;
       let action;
       if (isMyFriend(friendId) || isReqSent(friendId)) {
-        await axios.delete(`/user/${props.authData?._id}/friend/${friendId}`);
-        action = DELETE_FRIEND_OR_REQ;
+        await dispatch(deleteFriend({authUserData, friendId}));
+        action = `${DELETE_FRIEND_OR_REQ} ${friendId}`;
       } else {
-        await axios.put(`/user/${props.authData?._id}/friend/${friendId}`);
-        action = ADD_FRIEND;
+        await dispatch(addFriend({authUserData, friendId}));
+        action = `${ADD_FRIEND} ${friendId}`;
       }
       props.peopleListUpdateData(action);
     } catch (err) {
@@ -69,7 +80,7 @@ export const PeopleList = (props: PeopleListProps) => {
   };
 
   return (
-      <Box sx={{display: 'flex', flexDirection: 'column', marginRight: '16px'}}>
+      <Box sx={{display: 'flex', flexDirection: 'column', marginRight: '16px', minHeight: '150px'}}>
         <>
           {props.section &&
               <Tabs value={requestTabValue} onChange={handleReqTabValueChange} style={{marginBottom: 15}}

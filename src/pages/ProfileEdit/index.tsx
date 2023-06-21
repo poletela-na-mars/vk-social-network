@@ -1,26 +1,36 @@
 import { useFormik } from 'formik';
 import axios from '../../axios';
 import { SyntheticEvent, useEffect } from 'react';
-import { selectIsAuth } from '../../redux/slices/auth';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+
+import { selectIsAuth } from '../../redux/slices/auth';
+import { fetchUser } from '../../redux/slices/users';
 import { profileEditValidationSchema } from './profileEditValidationSchema';
 
-import { Autocomplete, Box, Button, Container, TextField, Typography, useTheme } from '@mui/material';
 import { NotFound } from '../NotFound';
 import { Loader } from '../../components';
 
+import { Autocomplete, Box, Button, Container, TextField, Typography, useTheme } from '@mui/material';
+
 import { cities } from '../../data/russianCities';
 import { isDataLoading } from '../../utils/data';
+
+import { UserData } from '../../types/UserData';
 
 export const ProfileEdit = () => {
   const theme = useTheme();
 
   const {id} = useParams();
-  const isAuth = useSelector(selectIsAuth);
   const navigate = useNavigate();
-  const authData = useSelector((state: any) => state.auth.data);
-  const isAuthDataLoading = isDataLoading(authData);
+  const dispatch = useDispatch();
+
+  const isAuth = useSelector(selectIsAuth);
+  const authUserData = useSelector((state: { auth: { data: UserData } }) => state.auth.data);
+  const user = useSelector((state: { users: { user: UserData } }) => state.users.user);
+
+  const isAuthDataLoading = isDataLoading(authUserData);
+  const isUserDataLoading = isDataLoading(user);
 
   const {touched, errors, isSubmitting, handleSubmit, handleChange, values, setFieldValue} = useFormik({
     initialValues: {
@@ -45,20 +55,24 @@ export const ProfileEdit = () => {
   });
 
   useEffect(() => {
-    if (!isAuthDataLoading) {
-      setFieldValue('firstName', authData?.firstName);
-      setFieldValue('lastName', authData?.lastName);
-      setFieldValue('city', authData?.city);
-      setFieldValue('uniOrJob', authData?.uniOrJob);
-      setFieldValue('avatarUrl', authData?.avatarUrl);
+    dispatch(fetchUser({id}));
+  }, []);
+
+  useEffect(() => {
+    if (!isUserDataLoading && !isAuthDataLoading) {
+      setFieldValue('firstName', user?.firstName);
+      setFieldValue('lastName', user?.lastName);
+      setFieldValue('city', user?.city);
+      setFieldValue('uniOrJob', user?.uniOrJob);
+      setFieldValue('avatarUrl', user?.avatarUrl);
     }
-  }, [isAuthDataLoading]);
+  }, [isUserDataLoading, isAuthDataLoading]);
 
   if (!window.localStorage.getItem('token') && !isAuth) {
     navigate('/login');
   }
 
-  if (!isAuthDataLoading && id !== authData?._id) {
+  if (!isAuthDataLoading && !isUserDataLoading && user?._id !== authUserData?._id) {
     return <NotFound />
   }
 
@@ -68,7 +82,7 @@ export const ProfileEdit = () => {
 
   return (
       <Container maxWidth='lg'>
-        {isAuthDataLoading
+        {isUserDataLoading || isAuthDataLoading
             ? <Loader />
             :
             <Box
