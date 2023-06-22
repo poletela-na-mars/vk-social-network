@@ -25,6 +25,7 @@ export const postPost: any = createAsyncThunk('posts/postPost', async ({values})
       });
 });
 
+// TODO - [WORK] - may be useful for infinity scroll (Post)
 // // @ts-ignore
 // export const fetchPost: any = createAsyncThunk('posts/fetchPost', async ({id}) => {
 //   return axios.get(`/posts/${id}`)

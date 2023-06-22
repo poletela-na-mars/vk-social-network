@@ -7,7 +7,10 @@ import { Box, Button, Container, Typography } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import styles from '../../pages/Profile/Profile.module.scss';
 
+import { Skeleton } from './Skeleton';
+
 import { formatDateWithTime } from '../../utils/date';
+import { isDataLoading } from '../../utils/data';
 
 import { UserData } from '../../types/UserData';
 import { PostType } from '../../types/PostType';
@@ -19,7 +22,9 @@ export const Post = (props: PostType) => {
   });
 
   const [likes, setLikes] = useState<number>(props.likes.length);
-  const [user, setUser] = useState<UserData>();
+  const [user, setUser] = useState<UserData | undefined>(undefined);
+
+  const isUserLoading = isDataLoading(user);
 
   const userId = props.user;
 
@@ -51,7 +56,7 @@ export const Post = (props: PostType) => {
         alignItems: 'flex-start',
         margin: '16px 0',
       }}>
-        {inView
+        {inView && !isUserLoading
             ?
             <>
               <Container disableGutters sx={{display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-start'}}>
@@ -87,7 +92,7 @@ export const Post = (props: PostType) => {
               </Button>
             </>
             :
-            <h1>Skeleton</h1>
+            <Skeleton key={props._id} />
         }
       </Box>
   );

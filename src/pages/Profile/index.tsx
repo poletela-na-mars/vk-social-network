@@ -41,7 +41,7 @@ export const Profile = () => {
 
   const isCurUserDataLoading = isDataLoading(user);
   const isAuthDataLoading = isDataLoading(authUserData);
-  const isPostLoading = isDataLoading(posts);
+  const isPostsLoading = isDataLoading(posts);
 
   const isMyProfile = (!isCurUserDataLoading && !isAuthDataLoading) && user?._id === authUserData?._id;
 
@@ -160,7 +160,7 @@ export const Profile = () => {
 
   return (
       <Container maxWidth='lg'>
-        {isCurUserDataLoading || isAuthDataLoading || isPostLoading
+        {isCurUserDataLoading || isAuthDataLoading || isPostsLoading
             ? <Loader />
             : (
                 <>
