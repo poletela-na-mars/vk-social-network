@@ -46,8 +46,8 @@ export const ProfileEdit = () => {
     validationSchema: profileEditValidationSchema,
     onSubmit: async (values: object) => {
       try {
-        await axios.patch(`/user/${id}`, values);
-        navigate(`/user/${id}`);
+        await axios.patch(`/users/${id}`, values);
+        navigate(`/users/${id}`);
       } catch (err) {
         console.error(err);
       }

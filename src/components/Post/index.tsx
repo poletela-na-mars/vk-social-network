@@ -29,7 +29,7 @@ export const Post = (props: PostType) => {
   const userId = props.user;
 
   useEffect(() => {
-    axios.get(`/user/${userId}`)
+    axios.get(`/users/${userId}`)
         .then((res) => {
           setUser(res.data);
         })
@@ -73,7 +73,7 @@ export const Post = (props: PostType) => {
                       marginLeft: '8px'
                     }}
                 >
-                  <Link to={`/user/${user?._id}`} className={styles.profileLink}
+                  <Link to={`/users/${user?._id}`} className={styles.profileLink}
                         style={{color: 'black', fontWeight: 'bold', marginBottom: '8px'}}>
                     {`${user?.firstName} ${user?.lastName}`}
                   </Link>

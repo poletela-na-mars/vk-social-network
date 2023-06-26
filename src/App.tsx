@@ -24,9 +24,9 @@ const App = () => {
           <Route path='*' element={<NotFound />} />
           <Route path='/login' element={<Login />} />
           <Route path='/register' element={<Registration />} />
-          <Route path='/user/:id/friends' element={<Friends />} />
-          <Route path='/user/:id/edit' element={<ProfileEdit />} />
-          <Route path='/user/:id' element={<Profile />} />
+          <Route path='/users/:id/friends' element={<Friends />} />
+          <Route path='/users/:id/edit' element={<ProfileEdit />} />
+          <Route path='/users/:id' element={<Profile />} />
         </Routes>
       </ThemeProvider>
   );

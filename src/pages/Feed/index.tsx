@@ -27,16 +27,17 @@ export const Feed = () => {
   const posts = useSelector((state: { posts: { posts: PostType[] } }) => state.posts.posts);
   const isPostsLoading = isDataLoading(posts);
 
-  if (!window.localStorage.getItem('token') && !isAuth) {
-    navigate('/login');
-  }
-
   const firstRendered = useRef<boolean>(false);
 
   const mode = Mode.Friends;
   useEffect(() => {
     if (!firstRendered.current) {
       dispatch(fetchAuthMe());
+
+      if (!window.localStorage.getItem('token') || !isAuth) {
+        navigate('/login');
+      }
+
       firstRendered.current = true;
     }
     if (!isAuthDataLoading) {

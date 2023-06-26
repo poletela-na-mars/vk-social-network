@@ -29,10 +29,10 @@ export const PeopleList = (props: PeopleListProps) => {
     if (props.areMyFriends && props.section) {
       switch (requestTabValue) {
         case ALL_REQUESTS:
-          navigate(`/user/${props.authData?._id}/friends?section=${ALL_REQUESTS}`);
+          navigate(`/users/${props.authData?._id}/friends?section=${ALL_REQUESTS}`);
           break;
         case OUT_REQUESTS:
-          navigate(`/user/${props.authData?._id}/friends?section=${OUT_REQUESTS}`);
+          navigate(`/users/${props.authData?._id}/friends?section=${OUT_REQUESTS}`);
           break;
       }
     }
@@ -108,7 +108,7 @@ export const PeopleList = (props: PeopleListProps) => {
                            src={user?.avatarUrl ? `${process.env.REACT_APP_API_URL}${user?.avatarUrl}` :
                                '/default-avatar.png'}
                            alt={`${user?.firstName} ${user?.lastName}`} />
-                      <Link to={`/user/${user?._id}`} className={styles.profileLink} style={{color: 'black'}}>
+                      <Link to={`/users/${user?._id}`} className={styles.profileLink} style={{color: 'black'}}>
                         <Typography>
                           {`${user?.firstName} ${user?.lastName}, ${convertDateToAge(user?.birthday)}`}
                         </Typography>

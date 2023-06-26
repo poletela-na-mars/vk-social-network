@@ -54,13 +54,13 @@ export const Friends = () => {
   useEffect(() => {
     switch (tabValue) {
       case 'friends':
-        navigate(`/user/${id}/friends`);
+        navigate(`/users/${id}/friends`);
         break;
       case 'requests':
-        navigate(`/user/${authUserData?._id}/friends?section=all_requests`);
+        navigate(`/users/${authUserData?._id}/friends?section=all_requests`);
         break;
       case 'people':
-        navigate(`/user/${id}/friends?act=find`);
+        navigate(`/users/${id}/friends?act=find`);
         break;
     }
   }, [tabValue]);

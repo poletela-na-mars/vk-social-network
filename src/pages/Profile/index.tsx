@@ -77,11 +77,11 @@ export const Profile = () => {
   }
 
   const goToEditProfilePage = () => {
-    navigate(`/user/${authUserData?._id}/edit`);
+    navigate(`/users/${authUserData?._id}/edit`);
   };
 
   const goToFriendsPage = () => {
-    navigate(`/user/${user?._id}/friends`);
+    navigate(`/users/${user?._id}/friends`);
   };
 
   const isMyFriend = user?.friends.includes(authUserData?._id as never);

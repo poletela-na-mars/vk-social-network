@@ -16,7 +16,7 @@ export const CurrentUserHeader = (props: CurrentUserHeaderProps) => {
              src={props.authData?.avatarUrl ? `${process.env.REACT_APP_API_URL}${props.authData?.avatarUrl}` :
                  '/default-avatar.png'}
              alt={`${props.authData?.firstName} ${props.authData?.lastName}`} />
-        <Link to={`/user/${props.authData?._id}`} className={styles.profileLink}
+        <Link to={`/users/${props.authData?._id}`} className={styles.profileLink}
               style={{color: 'black', marginLeft: '8px', fontWeight: 'bold'}}>
           {`${props.authData?.firstName} ${props.authData?.lastName}`}
         </Link>

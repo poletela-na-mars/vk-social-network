@@ -57,7 +57,7 @@ export const Login = () => {
   }, [isAuth, isAuthDataLoading]);
 
   if (isAuth && !isAuthDataLoading) {
-    return <Navigate to={`/user/${authData?._id}`} />;
+    return <Navigate to={`/users/${authData?._id}`} />;
   }
 
   const handlePasswordVisibilityClick = () => {

@@ -3,7 +3,7 @@ import axios from '../../axios';
 
 // @ts-ignore
 export const fetchUser: any = createAsyncThunk('users/fetchUser', async ({id}) => {
-  return axios.get(`/user/${id}`)
+  return axios.get(`/users/${id}`)
       .then((res) => {
         return res.data;
       })
@@ -15,7 +15,7 @@ export const fetchUser: any = createAsyncThunk('users/fetchUser', async ({id}) =
 
 // @ts-ignore
 export const updateUserData: any = createAsyncThunk('users/updateUserData', async ({id, data}) => {
-  return axios.patch(`/user/${id}`, data)
+  return axios.patch(`/users/${id}`, data)
       .then((res) => {
         return res.data;
       })
@@ -27,7 +27,7 @@ export const updateUserData: any = createAsyncThunk('users/updateUserData', asyn
 
 // @ts-ignore
 export const addFriend: any = createAsyncThunk('users/addFriend', async ({authUserData, friendId}) => {
-  return axios.put(`/user/${authUserData?._id}/friend/${friendId}`)
+  return axios.put(`/users/${authUserData?._id}/friend/${friendId}`)
       .then((res) => {
         return res.data;
       })
@@ -42,7 +42,7 @@ export const deleteFriend: any = createAsyncThunk('users/deleteFriend', async ({
   console.log('ОГОО');
   console.log(authUserData);
 
-  return axios.delete(`/user/${authUserData?._id}/friend/${friendId}`)
+  return axios.delete(`/users/${authUserData?._id}/friend/${friendId}`)
       .then((res) => {
         return res.data;
       })
@@ -54,7 +54,7 @@ export const deleteFriend: any = createAsyncThunk('users/deleteFriend', async ({
 
 // @ts-ignore
 export const fetchUsers: any = createAsyncThunk('users/fetchUsers', async ({id, section, act}) => {
-  return axios.get(`/${id}/users`, {params: {section: section, act: act}})
+  return axios.get(`/users`, {params: {section: section, act: act, id: id}})
       .then((res) => {
         return res.data;
       })
